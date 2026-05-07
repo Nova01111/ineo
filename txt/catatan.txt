@@ -1,0 +1,3 @@
+Kekurangan Admin Pusat
+1. Sinkronisasi side
+2. Tambah filter cabang di dashboard
