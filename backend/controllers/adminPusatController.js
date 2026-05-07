@@ -490,16 +490,26 @@ const getNotifikasi = async (req, res) => {
   try {
     const [rows] = await db.query(
       `SELECT
-         ng.id, ng.is_dibaca, ng.is_dikonfirmasi, ng.tgl_konfirmasi, ng.created_at,
-         u.nama AS nama_teknisi,
+         ng.id,
+         ng.rekap_gaji_id,
+         ng.is_dibaca,
+         ng.is_dikonfirmasi,
+         ng.tgl_konfirmasi,
+         ng.created_at,
+         u.nama  AS nama_teknisi,
          ac.nama AS nama_admin_cabang,
          c.nama_cabang,
-         rg.total_gaji, rg.gaji_bersih, rg.tgl_transfer
+         rg.total_gaji,
+         rg.gaji_bersih,
+         rg.tgl_transfer,
+         lw.bulan,
+         lw.tahun
        FROM notifikasi_gaji ng
        JOIN users u        ON ng.teknisi_id      = u.id
        JOIN users ac       ON ng.admin_cabang_id = ac.id
        JOIN cabang c       ON ac.cabang_id       = c.id
        JOIN rekap_gaji rg  ON ng.rekap_gaji_id   = rg.id
+       JOIN laporan_wo lw  ON rg.laporan_wo_id   = lw.id
        WHERE ng.admin_pusat_id = ?
        ORDER BY ng.created_at DESC`,
       [admin_pusat_id]

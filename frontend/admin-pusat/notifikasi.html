@@ -314,15 +314,18 @@ if (!requireAuth("admin_pusat")) throw new Error("Unauthorized");
 initUserInfo();
 
 // ── State ───────────────────────────────────────────────────────────────
-const BLN = ["","Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
-let semuaNotif   = [];   // riwayat notifikasi (GET /notifikasi)
-let rekapBelum   = [];   // rekap yg belum dinotifikasi
-let tabAktif     = "semua";
-let rekapTarget  = null; // rekap yang akan dikirim (untuk modal konfirm)
+const BLN = ["","Januari","Februari","Maret","April","Mei","Juni","Juli",
+             "Agustus","September","Oktober","November","Desember"];
+let semuaNotif      = [];
+let rekapBelum      = [];
+let sudahDikirimIds = new Set();
+let tabAktif        = "semua";
+let rekapTarget     = null;
 
 // ── Init ────────────────────────────────────────────────────────────────
 async function init() {
-  await Promise.all([loadRiwayat(), loadBelumNotif()]);
+  await loadRiwayat();    // harus selesai dulu agar sudahDikirimIds terisi
+  await loadBelumNotif(); // baru filter pakai sudahDikirimIds
 }
 
 // ── Refresh manual ──────────────────────────────────────────────────────
@@ -330,55 +333,10 @@ async function refresh() {
   const btn = document.getElementById("btn-refresh");
   btn.classList.add("spinning");
   btn.disabled = true;
-  await Promise.all([loadRiwayat(), loadBelumNotif()]);
+  await loadRiwayat();
+  await loadBelumNotif();
   btn.classList.remove("spinning");
   btn.disabled = false;
-}
-
-// ── Load rekap yang belum dinotifikasi ──────────────────────────────────
-// Caranya: ambil semua rekap (GET /rekap-gaji), lalu ambil semua notif (GET /notifikasi).
-// Rekap yang rekap.id TIDAK ada di notif.rekap_gaji_id → belum dinotifikasi.
-// Catatan: API getNotifikasi tidak return rekap_gaji_id secara eksplisit,
-// maka kita pakai endpoint rekap-gaji dan filter dari sisi client
-// berdasarkan data notifikasi yang sudah ada.
-async function loadBelumNotif() {
-  document.getElementById("belum-wrap").innerHTML =
-    '<div class="spinner-wrap"><div class="spinner"></div></div>';
-
-  // Ambil semua rekap gaji milik admin pusat ini
-  const dataRekap = await apiFetch("/admin-pusat/rekap-gaji");
-  if (!dataRekap?.success) {
-    document.getElementById("belum-wrap").innerHTML = renderStateError("Gagal memuat data rekap.");
-    return;
-  }
-
-  // Ambil rekap_gaji_id yang sudah punya notifikasi dari riwayat
-  // semuaNotif sudah diisi oleh loadRiwayat() yang dijalankan paralel,
-  // tapi karena Promise.all urutan tidak dijamin selesai,
-  // kita ambil ulang dari cache atau tunggu dengan cara sederhana:
-  // gunakan data notif yang sudah ada di semuaNotif (jika sudah terisi)
-  // atau fetch lagi.
-  const sudahDikirimIds = new Set(semuaNotif.map(n => n.rekap_gaji_id).filter(Boolean));
-
-  // Filter rekap yang belum ada notifikasinya
-  // Karena GET /notifikasi tidak return rekap_gaji_id, kita perlu endpoint
-  // rekap-gaji/:id atau infer dari data yang ada.
-  // Solusi pragmatis: tandai semua rekap, coba kirim notif —
-  // jika API menolak "sudah pernah", disable tombolnya.
-  // Tapi lebih baik: kita tambahkan field has_notifikasi dari join di backend.
-  // Sementara ini: ambil semua rekap status 'dibayar',
-  // lalu saring berdasarkan sudahDikirimIds jika ada.
-  // Karena semuaNotif tidak punya rekap_gaji_id (dari controller GET),
-  // kita tampilkan semua rekap berstatus 'dibayar' dan biarkan tombol
-  // menangani penolakan dari API.
-
-  const semuaRekap = dataRekap.data || [];
-
-  // Tampilkan semua rekap yang dibayar — tombol akan handle jika sudah dikirim
-  rekapBelum = semuaRekap.filter(r => r.status === "dibayar");
-
-  updateMetrics(semuaRekap);
-  renderBelum();
 }
 
 // ── Load riwayat notifikasi ─────────────────────────────────────────────
@@ -388,31 +346,57 @@ async function loadRiwayat() {
 
   const data = await apiFetch("/admin-pusat/notifikasi");
   if (!data?.success) {
-    document.getElementById("notif-wrap").innerHTML = renderStateError("Gagal memuat riwayat notifikasi.");
+    document.getElementById("notif-wrap").innerHTML =
+      renderStateError("Gagal memuat riwayat notifikasi.");
     return;
   }
 
   semuaNotif = data.data || [];
+
+  // rekap_gaji_id sekarang sudah ada di response (sudah ditambah di backend)
+  sudahDikirimIds = new Set(
+    semuaNotif.map(n => n.rekap_gaji_id).filter(id => id != null)
+  );
+
   updateTabCount();
   renderNotif();
 }
 
+// ── Load rekap yang belum dinotifikasi ──────────────────────────────────
+async function loadBelumNotif() {
+  document.getElementById("belum-wrap").innerHTML =
+    '<div class="spinner-wrap"><div class="spinner"></div></div>';
+
+  const dataRekap = await apiFetch("/admin-pusat/rekap-gaji");
+  if (!dataRekap?.success) {
+    document.getElementById("belum-wrap").innerHTML =
+      renderStateError("Gagal memuat data rekap.");
+    return;
+  }
+
+  const semuaRekap = dataRekap.data || [];
+
+  // Hanya tampilkan rekap dibayar yang belum ada notifikasinya
+  rekapBelum = semuaRekap.filter(r =>
+    r.status === "dibayar" && !sudahDikirimIds.has(r.id)
+  );
+
+  updateMetrics(semuaRekap);
+  renderBelum();
+}
+
 // ── Update metrics ──────────────────────────────────────────────────────
 function updateMetrics(semuaRekap) {
-  const terkirim  = semuaNotif.length;
-  const konfirm   = semuaNotif.filter(n => n.is_dikonfirmasi).length;
-  const tunggu    = terkirim - konfirm;
+  const terkirim = semuaNotif.length;
+  const konfirm  = semuaNotif.filter(n => n.is_dikonfirmasi).length;
+  const tunggu   = terkirim - konfirm;
+  const belum    = rekapBelum.length; // pakai array yang sudah difilter
 
-  // "Belum dinotifikasi" = rekap dibayar yang belum ada di daftar notif
-  // Karena notif tidak ekspos rekap_gaji_id, kita pakai hitung sederhana:
-  const belum = Math.max(0, (semuaRekap.filter(r => r.status === "dibayar").length) - terkirim);
-
-  document.getElementById("m-belum").textContent    = belum;
-  document.getElementById("m-terkirim").textContent  = terkirim;
+  document.getElementById("m-belum").textContent   = belum;
+  document.getElementById("m-terkirim").textContent = terkirim;
   document.getElementById("m-konfirm").textContent  = konfirm;
   document.getElementById("m-tunggu").textContent   = tunggu;
 
-  // Badge sidebar
   const badge = document.getElementById("badge-notif");
   if (tunggu > 0) { badge.textContent = tunggu; badge.classList.add("show"); }
   else badge.classList.remove("show");
@@ -478,7 +462,8 @@ function renderBelum() {
         <div class="belum-gaji-val">${rupiah(r.gaji_bersih)}</div>
         <div class="belum-gaji-label">Gaji bersih</div>
       </div>
-      <button class="btn btn-green btn-sm" data-rekap-id="${r.id}"
+      <button class="btn btn-green btn-sm"
+              data-rekap-id="${r.id}"
               data-teknisi="${escHtml(r.nama_teknisi)}"
               data-cabang="${escHtml(r.nama_cabang)}"
               data-periode="${BLN[r.bulan]} ${r.tahun}"
@@ -494,7 +479,6 @@ function renderBelum() {
   wrap.innerHTML = "";
   wrap.appendChild(list);
 
-  // Event delegation untuk tombol kirim di tiap card
   wrap.addEventListener("click", function(e) {
     const btn = e.target.closest("button[data-rekap-id]");
     if (!btn || btn.disabled) return;
@@ -505,8 +489,8 @@ function renderBelum() {
 // ── Render: riwayat notifikasi ───────────────────────────────────────────
 function renderNotif() {
   let filtered = semuaNotif;
-  if (tabAktif === "tunggu")   filtered = semuaNotif.filter(n => !n.is_dikonfirmasi);
-  if (tabAktif === "konfirm")  filtered = semuaNotif.filter(n =>  n.is_dikonfirmasi);
+  if (tabAktif === "tunggu")  filtered = semuaNotif.filter(n => !n.is_dikonfirmasi);
+  if (tabAktif === "konfirm") filtered = semuaNotif.filter(n =>  n.is_dikonfirmasi);
 
   const wrap = document.getElementById("notif-wrap");
 
@@ -516,7 +500,6 @@ function renderNotif() {
       tunggu:  "Tidak ada notifikasi yang menunggu konfirmasi.",
       konfirm: "Belum ada notifikasi yang dikonfirmasi cabang.",
     }[tabAktif];
-
     wrap.innerHTML = `
       <div class="state-box" style="padding:2rem">
         <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
@@ -532,10 +515,9 @@ function renderNotif() {
     const card  = document.createElement("div");
     card.className = "notif-card " + (sudah ? "sudah-konfirm" : "belum-konfirm");
     card.style.animation = `fadeUp .3s ease ${i * 0.05}s both`;
-
     card.innerHTML = `
       <div class="notif-hdr">
-        <div class="notif-dot ${sudah ? 'dot-sudah' : 'dot-belum'}"></div>
+        <div class="notif-dot ${sudah ? "dot-sudah" : "dot-belum"}"></div>
         <div class="notif-content">
           <div class="notif-title">
             <strong>${escHtml(n.nama_teknisi)}</strong>
@@ -544,21 +526,18 @@ function renderNotif() {
           </div>
           <div class="notif-meta-row">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Periode ${escHtml(BLN[n.bulan])} ${escHtml(String(n.tahun))}
+            <span style="color:var(--border)">·</span>
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             Dikirim ${escHtml(tglJamFormat(n.created_at))}
-            ${n.tgl_transfer
-              ? `<span style="color:var(--border)">·</span>
-                 <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                 Transfer ${escHtml(tglFormat(n.tgl_transfer))}`
-              : ""}
           </div>
         </div>
-        <span class="notif-badge ${sudah ? 'nb-sudah' : 'nb-belum'}">
+        <span class="notif-badge ${sudah ? "nb-sudah" : "nb-belum"}">
           ${sudah
             ? `<svg viewBox="0 0 24 24" style="width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"><polyline points="20 6 9 17 4 12"/></svg> Selesai`
             : "⏳ Menunggu"}
         </span>
       </div>
-
       <div class="notif-detail-row">
         <div class="nd-cell">
           <div class="nd-label">Gaji Bersih</div>
@@ -577,7 +556,6 @@ function renderNotif() {
           </div>
         </div>
       </div>
-
       <div class="notif-ftr">
         ${sudah
           ? `<span class="konfirm-stamp">
@@ -586,7 +564,6 @@ function renderNotif() {
              </span>`
           : `<span class="menunggu-stamp">Admin cabang belum mengkonfirmasi penerimaan gaji ini</span>`}
       </div>`;
-
     wrap.appendChild(card);
   });
 }
@@ -603,14 +580,14 @@ function gantiTab(tab) {
 // ── Modal konfirmasi kirim ───────────────────────────────────────────────
 function bukaKonfirm(btn) {
   rekapTarget = {
-    id       : parseInt(btn.dataset.rekapId),
-    teknisi  : btn.dataset.teknisi,
-    cabang   : btn.dataset.cabang,
-    periode  : btn.dataset.periode,
-    gaji     : btn.dataset.gaji,
-    potongan : btn.dataset.potongan,
-    kotor    : btn.dataset.kotor,
-    btn      : btn,
+    id      : parseInt(btn.dataset.rekapId),
+    teknisi : btn.dataset.teknisi,
+    cabang  : btn.dataset.cabang,
+    periode : btn.dataset.periode,
+    gaji    : btn.dataset.gaji,
+    potongan: btn.dataset.potongan,
+    kotor   : btn.dataset.kotor,
+    btn     : btn,
   };
 
   document.getElementById("modal-preview").innerHTML = `
@@ -624,11 +601,12 @@ function bukaKonfirm(btn) {
       <span class="v green">${escHtml(rekapTarget.gaji)}</span>
     </div>`;
 
-  // Reset tombol
-  const btnKirim = document.getElementById("btn-kirim-konfirm");  
+  const btnKirim = document.getElementById("btn-kirim-konfirm");
   btnKirim.disabled = false;
   btnKirim.innerHTML = `
-    <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round">
+      <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+    </svg>
     Kirim Sekarang`;
 
   document.getElementById("overlay-konfirm").classList.add("show");
@@ -661,41 +639,37 @@ async function kirimNotifikasi() {
   if (!data?.success) {
     btn.disabled = false;
     btn.innerHTML = `
-      <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round">
+        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
       Kirim Sekarang`;
 
-    // Jika sudah pernah dikirim → disable tombol di card & tutup modal
     if (data?.message?.includes("sudah pernah")) {
       showToast("Notifikasi untuk rekap ini sudah pernah dikirim sebelumnya.", false);
-      if (rekapTarget.btn) {
-        rekapTarget.btn.disabled = true;
-        rekapTarget.btn.textContent = "✓ Terkirim";
-        rekapTarget.btn.style.background = "var(--text-3)";
-        rekapTarget.btn.style.borderColor = "var(--text-3)";
-      }
-      tutupKonfirm();
+      // Hapus dari list karena ternyata sudah terkirim
+      sudahDikirimIds.add(rekapTarget.id);
+      rekapBelum = rekapBelum.filter(r => r.id !== rekapTarget.id);
+      renderBelum();
     } else {
       showToast(data?.message || "Gagal mengirim notifikasi.", false);
     }
+    tutupKonfirm();
     return;
   }
 
   showToast("✓ Notifikasi berhasil dikirim ke admin cabang!");
 
-  // Disable tombol di card yang bersangkutan
-  if (rekapTarget.btn) {
-    rekapTarget.btn.disabled = true;
-    rekapTarget.btn.innerHTML = "✓ Terkirim";
-    rekapTarget.btn.style.background = "var(--text-3)";
-    rekapTarget.btn.style.borderColor = "var(--text-3)";
-  }
+  // Hapus dari list secara langsung tanpa reload halaman
+  sudahDikirimIds.add(rekapTarget.id);
+  rekapBelum = rekapBelum.filter(r => r.id !== rekapTarget.id);
+  renderBelum();
 
   tutupKonfirm();
 
-  // Reload riwayat agar notif baru muncul di daftar
+  // Reload riwayat agar notif baru muncul di daftar bawah
   await loadRiwayat();
 
-  // Update metrics
+  // Update metrics dengan data rekap terbaru
   const dataRekap = await apiFetch("/admin-pusat/rekap-gaji");
   if (dataRekap?.success) updateMetrics(dataRekap.data || []);
 }
