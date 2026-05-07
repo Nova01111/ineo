@@ -8,8 +8,8 @@ const db = require("../config/db");
 const getDashboard = async (req, res) => {
   const { id: admin_pusat_id } = req.user;
   const now   = new Date();
-  const bulan = now.getMonth() + 1;
-  const tahun = now.getFullYear();
+  const bulan = parseInt(req.query.bulan) || (now.getMonth() + 1);
+  const tahun = parseInt(req.query.tahun) || now.getFullYear();
 
   try {
     // Total laporan masuk (terkirim) ke admin pusat ini

@@ -64,7 +64,7 @@
 
     /* CARDS */
     .card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; }
-    .card-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .card-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; gap: 12px; flex-wrap: wrap; }
     .card-title { font-size: 13.5px; font-weight: 600; color: var(--text); }
     .card-sub   { font-size: 12px; color: var(--text-3); }
 
@@ -94,6 +94,55 @@
     .btn-blue:hover { background: #1248a0; color: white; }
     .btn-sm { font-size: 11.5px; padding: 5px 10px; }
 
+    /* FILTER PERIODE */
+    .filter-periode { display: flex; align-items: center; gap: 6px; }
+    .filter-select {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 5px 28px 5px 10px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      transition: border-color .15s, background-color .15s;
+    }
+    .filter-select:hover { border-color: var(--blue-acc); background-color: var(--white); }
+    .filter-select:focus { border-color: var(--blue-acc); background-color: var(--white); }
+    .btn-filter {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 5px 12px;
+      border-radius: 7px;
+      border: 1px solid var(--blue);
+      background: var(--blue);
+      color: white;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: background .15s;
+    }
+    .btn-filter:hover { background: #1248a0; }
+    .btn-filter:disabled { opacity: .6; cursor: not-allowed; }
+    .btn-filter svg { width: 13px; height: 13px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .filter-label-result {
+      font-size: 11.5px;
+      color: var(--text-3);
+      background: var(--border-2);
+      padding: 3px 9px;
+      border-radius: 99px;
+      font-weight: 500;
+    }
+
     /* AKTIVITAS */
     .act-item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border-2); }
     .act-item:last-child { border-bottom: none; }
@@ -116,10 +165,15 @@
     .spinner-wrap { display: flex; align-items: center; justify-content: center; padding: 2.5rem; }
     .spinner { width: 24px; height: 24px; border: 2.5px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin .7s linear infinite; }
 
+    /* Metric skeleton saat loading */
+    .metric-skeleton { display: inline-block; width: 80px; height: 26px; background: linear-gradient(90deg, var(--border-2) 25%, var(--border) 50%, var(--border-2) 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; border-radius: 5px; }
+    .metric-skeleton.sm { width: 48px; height: 26px; }
+
     .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--navy); color: white; padding: 10px 16px; border-radius: 9px; font-size: 13px; display: none; z-index: 999; }
 
-    @keyframes spin   { to { transform: rotate(360deg); } }
-    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes spin    { to { transform: rotate(360deg); } }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+    @keyframes fadeUp  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
@@ -172,6 +226,30 @@
   </div>
 
   <div class="content">
+
+    <!-- FILTER PERIODE — satu titik kontrol untuk seluruh halaman -->
+    <div class="card" style="margin-bottom:1.25rem; padding: 1rem 1.25rem;">
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <span style="font-size:12.5px; font-weight:600; color:var(--text-2);">Periode:</span>
+        <div class="filter-periode">
+          <select class="filter-select" id="filter-bulan">
+            <option value="1">Januari</option><option value="2">Februari</option>
+            <option value="3">Maret</option><option value="4">April</option>
+            <option value="5">Mei</option><option value="6">Juni</option>
+            <option value="7">Juli</option><option value="8">Agustus</option>
+            <option value="9">September</option><option value="10">Oktober</option>
+            <option value="11">November</option><option value="12">Desember</option>
+          </select>
+          <select class="filter-select" id="filter-tahun"></select>
+          <button class="btn-filter" id="btn-terapkan" onclick="terapkanFilter()">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Tampilkan
+          </button>
+        </div>
+        <span class="filter-label-result" id="label-periode">-</span>
+      </div>
+    </div>
+
     <!-- METRICS -->
     <div class="metrics">
       <div class="metric">
@@ -182,12 +260,12 @@
       <div class="metric">
         <div class="metric-label">Total Gaji Dibayar</div>
         <div class="metric-val green" id="m-gaji" style="font-size:18px;margin-top:4px"><div class="spinner" style="width:20px;height:20px"></div></div>
-        <div class="metric-sub" id="m-gaji-sub">Bulan ini</div>
+        <div class="metric-sub" id="m-gaji-sub">-</div>
       </div>
       <div class="metric">
         <div class="metric-label">Teknisi Dibayar</div>
         <div class="metric-val blue" id="m-tek-dibayar"><div class="spinner" style="width:20px;height:20px;margin-top:4px"></div></div>
-        <div class="metric-sub" id="m-tek-sub">Bulan ini</div>
+        <div class="metric-sub" id="m-tek-sub">-</div>
       </div>
       <div class="metric">
         <div class="metric-label">Menunggu Konfirmasi</div>
@@ -196,17 +274,13 @@
       </div>
     </div>
 
-    <!-- RINGKASAN + AKTIVITAS -->
-    <div class="grid-2">
-      <!-- Ringkasan laporan -->
-      <div class="card" style="grid-column: 1 / -1">
-        <div class="card-hdr">
-          <span class="card-title">Ringkasan Laporan Bulan Ini</span>
-          <span class="card-sub" id="label-periode">-</span>
-        </div>
-        <div id="tbl-ringkasan">
-          <div class="spinner-wrap"><div class="spinner"></div></div>
-        </div>
+    <!-- RINGKASAN -->
+    <div class="card" style="margin-bottom:1rem;">
+      <div class="card-hdr">
+        <span class="card-title">Ringkasan Laporan</span>
+      </div>
+      <div id="tbl-ringkasan">
+        <div class="spinner-wrap"><div class="spinner"></div></div>
       </div>
     </div>
 
@@ -239,119 +313,177 @@
 
   const BLN = ["","Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
   const now  = new Date();
-  document.getElementById("tgl-sekarang").textContent  = `${now.getDate()} ${BLN[now.getMonth()+1]} ${now.getFullYear()}`;
-  document.getElementById("label-periode").textContent = `${BLN[now.getMonth()+1]} ${now.getFullYear()}`;
-  document.getElementById("m-gaji-sub").textContent    = `${BLN[now.getMonth()+1]} ${now.getFullYear()}`;
-  document.getElementById("m-tek-sub").textContent     = `${BLN[now.getMonth()+1]} ${now.getFullYear()}`;
 
+  // ── Init filter dropdown ──────────────────────────────────────────────────
+  (function initFilter() {
+    const selBulan = document.getElementById("filter-bulan");
+    const selTahun = document.getElementById("filter-tahun");
+
+    selBulan.value = now.getMonth() + 1;
+
+    const tahunNow = now.getFullYear();
+    for (let y = tahunNow; y >= tahunNow - 10; y--) {
+      const opt = document.createElement("option");
+      opt.value = y; opt.textContent = y;
+      selTahun.appendChild(opt);
+    }
+    selTahun.value = tahunNow;
+  })();
+
+  document.getElementById("tgl-sekarang").textContent =
+    `${now.getDate()} ${BLN[now.getMonth()+1]} ${now.getFullYear()}`;
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
   function showToast(msg) {
     const t = document.getElementById("toast");
-    t.textContent = msg;
-    t.style.display = "block";
+    t.textContent = msg; t.style.display = "block";
     setTimeout(() => t.style.display = "none", 3000);
   }
 
-  async function loadDashboard() {
-    const data = await apiFetch("/admin-pusat/dashboard");
-    if (!data?.success) { showToast("Gagal memuat dashboard"); return; }
-    const d = data.data;
+  function setMetricLoading() {
+    ["m-laporan","m-gaji","m-tek-dibayar","m-konfirmasi"].forEach(id => {
+      document.getElementById(id).innerHTML =
+        `<div class="spinner" style="width:20px;height:20px;margin-top:4px"></div>`;
+    });
+    document.getElementById("status-cabang").innerHTML =
+      `<div class="spinner-wrap"><div class="spinner"></div></div>`;
+  }
 
-    // Metrics
+  function updateLabelPeriode(bulan, tahun) {
+    const label = `${BLN[bulan]} ${tahun}`;
+    document.getElementById("label-periode").textContent = label;
+    document.getElementById("m-gaji-sub").textContent    = label;
+    document.getElementById("m-tek-sub").textContent     = label;
+  }
+
+  // ── Render helpers ────────────────────────────────────────────────────────
+  function renderMetrics(d) {
     document.getElementById("m-laporan").textContent     = d.laporan_masuk;
     document.getElementById("m-gaji").textContent        = rupiah(d.total_gaji_dibayar);
     document.getElementById("m-tek-dibayar").textContent = d.teknisi_dibayar;
     document.getElementById("m-konfirmasi").textContent  = d.menunggu_konfirmasi;
 
-    // Badge sidebar laporan masuk
+    // Badge sidebar — selalu update agar sesuai periode yang dipilih
+    const badge = document.getElementById("badge-laporan");
     if (d.laporan_masuk > 0) {
-      const badge = document.getElementById("badge-laporan");
       badge.textContent = d.laporan_masuk;
       badge.classList.add("show");
-    }
-
-    // Tabel ringkasan
-    const tbl = document.getElementById("tbl-ringkasan");
-    if (!d.ringkasan || d.ringkasan.length === 0) {
-      tbl.innerHTML = `<div class="state-box">
-        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        <div class="state-title">Belum ada laporan bulan ini</div>
-        <div class="state-sub">Laporan dari admin cabang akan muncul di sini</div>
-      </div>`;
     } else {
-      let html = `<table>
-        <thead><tr>
-          <th>Teknisi</th><th>Cabang</th><th>Sub Project</th>
-          <th>Total Gaji</th><th>Gaji Bersih</th><th>Status Laporan</th><th>Pembayaran</th>
-        </tr></thead><tbody>`;
-      d.ringkasan.forEach(r => {
-        const laporanBadge = r.status_laporan
-          ? `<span class="badge b-${r.status_laporan}">${r.status_laporan}</span>`
-          : `<span class="badge b-draft">-</span>`;
-        const bayarBadge = r.status_pembayaran
-          ? `<span class="badge b-${r.status_pembayaran}">${r.status_pembayaran}</span>`
-          : `<span class="badge b-draft">-</span>`;
-        html += `<tr>
-          <td><strong>${r.nama_teknisi}</strong></td>
-          <td>${r.nama_cabang}</td>
-          <td>${r.sub_project || "-"}</td>
-          <td>${r.total_gaji ? rupiah(r.total_gaji) : "-"}</td>
-          <td>${r.gaji_bersih ? `<strong style="color:var(--green)">${rupiah(r.gaji_bersih)}</strong>` : "-"}</td>
-          <td>${laporanBadge}</td>
-          <td>${bayarBadge}</td>
-        </tr>`;
-      });
-      html += "</tbody></table>";
-      tbl.innerHTML = html;
-    }
-
-    // Aktivitas
-    const akt = document.getElementById("aktivitas-list");
-    if (!d.ringkasan || d.ringkasan.length === 0) {
-      akt.innerHTML = `<div class="state-box" style="padding:1.5rem">
-        <div class="state-title">Belum ada aktivitas</div>
-      </div>`;
-    } else {
-      const warna = { selesai: "var(--green)", terkirim: "var(--blue-acc)", diproses: "var(--amber)", dibayar: "var(--green)" };
-      let aktHtml = "";
-      d.ringkasan.filter(r => r.status_laporan).forEach(r => {
-        aktHtml += `<div class="act-item">
-          <div class="act-dot" style="background:${warna[r.status_laporan] || "var(--text-3)"}"></div>
-          <div>
-            <div class="act-text">Laporan <strong>${r.nama_teknisi}</strong> (${r.nama_cabang}) — <strong>${r.status_laporan}</strong></div>
-            <div class="act-time">${BLN[now.getMonth()+1]} ${now.getFullYear()}</div>
-          </div>
-        </div>`;
-      });
-      akt.innerHTML = aktHtml || `<div class="state-box" style="padding:1.5rem"><div class="state-title">Belum ada aktivitas</div></div>`;
-    }
-
-    // Status cabang
-    const cabDiv = document.getElementById("status-cabang");
-    if (!d.status_cabang || d.status_cabang.length === 0) {
-      cabDiv.innerHTML = `<div class="state-box" style="padding:1.5rem">
-        <div class="state-title">Belum ada data cabang</div>
-      </div>`;
-    } else {
-      let cabHtml = "";
-      d.status_cabang.forEach(c => {
-        const total  = parseInt(c.total_notifikasi) || 0;
-        const konfirm = parseInt(c.sudah_konfirmasi) || 0;
-        const semua   = total > 0 && konfirm >= total;
-        cabHtml += `<div class="cabang-row">
-          <div>
-            <div class="cabang-nama">${c.nama_cabang}</div>
-            <div class="cabang-sub">${konfirm} dari ${total} notifikasi dikonfirmasi</div>
-          </div>
-          <span class="badge ${semua ? "b-selesai" : konfirm > 0 ? "b-diproses" : "b-draft"}">
-            ${semua ? "Semua Terkonfirmasi" : konfirm > 0 ? "Sebagian" : "Belum Ada"}
-          </span>
-        </div>`;
-      });
-      cabDiv.innerHTML = cabHtml;
+      badge.classList.remove("show");
     }
   }
 
-  loadDashboard();
+  function renderRingkasan(ringkasan, bulan, tahun) {
+    const tbl = document.getElementById("tbl-ringkasan");
+    if (!ringkasan || ringkasan.length === 0) {
+      tbl.innerHTML = `<div class="state-box">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <div class="state-title">Belum ada laporan untuk ${BLN[bulan]} ${tahun}</div>
+        <div class="state-sub">Laporan dari admin cabang akan muncul di sini</div>
+      </div>`;
+      return;
+    }
+    let html = `<table>
+      <thead><tr>
+        <th>Teknisi</th><th>Cabang</th><th>Sub Project</th>
+        <th>Total Gaji</th><th>Gaji Bersih</th><th>Progres Pusat</th><th>Pembayaran</th>
+      </tr></thead><tbody>`;
+    ringkasan.forEach(r => {
+      const laporanBadge = r.status_laporan
+        ? `<span class="badge b-${r.status_laporan}">${r.status_laporan}</span>`
+        : `<span class="badge b-draft">-</span>`;
+      const bayarBadge = r.status_pembayaran
+        ? `<span class="badge b-${r.status_pembayaran}">${r.status_pembayaran}</span>`
+        : `<span class="badge b-draft">-</span>`;
+      html += `<tr>
+        <td><strong>${r.nama_teknisi}</strong></td>
+        <td>${r.nama_cabang}</td>
+        <td>${r.sub_project || "-"}</td>
+        <td>${r.total_gaji ? rupiah(r.total_gaji) : "-"}</td>
+        <td>${r.gaji_bersih ? `<strong style="color:var(--green)">${rupiah(r.gaji_bersih)}</strong>` : "-"}</td>
+        <td>${laporanBadge}</td>
+        <td>${bayarBadge}</td>
+      </tr>`;
+    });
+    html += "</tbody></table>";
+    tbl.innerHTML = html;
+  }
+
+  function renderAktivitas(ringkasan, bulan, tahun) {
+    const akt = document.getElementById("aktivitas-list");
+    const warna = { selesai: "var(--green)", terkirim: "var(--blue-acc)", diproses: "var(--amber)", dibayar: "var(--green)" };
+    const items = (ringkasan || []).filter(r => r.status_laporan);
+    if (!items.length) {
+      akt.innerHTML = `<div class="state-box" style="padding:1.5rem">
+        <div class="state-title">Belum ada aktivitas</div>
+      </div>`;
+      return;
+    }
+    akt.innerHTML = items.map(r => `
+      <div class="act-item">
+        <div class="act-dot" style="background:${warna[r.status_laporan] || "var(--text-3)"}"></div>
+        <div>
+          <div class="act-text">Laporan <strong>${r.nama_teknisi}</strong> (${r.nama_cabang}) — <strong>${r.status_laporan}</strong></div>
+          <div class="act-time">${BLN[bulan]} ${tahun}</div>
+        </div>
+      </div>`).join("");
+  }
+
+  function renderStatusCabang(status_cabang) {
+    const cabDiv = document.getElementById("status-cabang");
+    if (!status_cabang || status_cabang.length === 0) {
+      cabDiv.innerHTML = `<div class="state-box" style="padding:1.5rem">
+        <div class="state-title">Belum ada data cabang</div>
+      </div>`;
+      return;
+    }
+    cabDiv.innerHTML = status_cabang.map(c => {
+      const total   = parseInt(c.total_notifikasi) || 0;
+      const konfirm = parseInt(c.sudah_konfirmasi) || 0;
+      const semua   = total > 0 && konfirm >= total;
+      return `<div class="cabang-row">
+        <div>
+          <div class="cabang-nama">${c.nama_cabang}</div>
+          <div class="cabang-sub">${konfirm} dari ${total} notifikasi dikonfirmasi</div>
+        </div>
+        <span class="badge ${semua ? "b-selesai" : konfirm > 0 ? "b-diproses" : "b-draft"}">
+          ${semua ? "Semua Terkonfirmasi" : konfirm > 0 ? "Sebagian" : "Belum Ada"}
+        </span>
+      </div>`;
+    }).join("");
+  }
+
+  // ── Core load — dipakai baik saat init maupun saat filter berubah ─────────
+  async function loadDashboard(bulan, tahun) {
+    // Tampilkan loading di semua section
+    setMetricLoading();
+    document.getElementById("tbl-ringkasan").innerHTML =
+      `<div class="spinner-wrap"><div class="spinner"></div></div>`;
+    document.getElementById("aktivitas-list").innerHTML =
+      `<div class="spinner-wrap"><div class="spinner"></div></div>`;
+
+    // Update label periode
+    updateLabelPeriode(bulan, tahun);
+
+    const data = await apiFetch(`/admin-pusat/dashboard?bulan=${bulan}&tahun=${tahun}`);
+    if (!data?.success) { showToast("Gagal memuat dashboard"); return; }
+
+    const d = data.data;
+    renderMetrics(d);
+    renderRingkasan(d.ringkasan, bulan, tahun);
+    renderAktivitas(d.ringkasan, bulan, tahun);
+    renderStatusCabang(d.status_cabang);
+  }
+
+  // ── Tombol Tampilkan ──────────────────────────────────────────────────────
+  function terapkanFilter() {
+    const bulan = parseInt(document.getElementById("filter-bulan").value);
+    const tahun = parseInt(document.getElementById("filter-tahun").value);
+    loadDashboard(bulan, tahun);
+  }
+
+  // ── Load pertama kali dengan bulan/tahun sekarang ─────────────────────────
+  loadDashboard(now.getMonth() + 1, now.getFullYear());
 </script>
 </body>
 </html>
