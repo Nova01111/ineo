@@ -1,3 +1,13 @@
+Catatan website jadi
+1. Revisi admin pusat = tanggal 7, 8, 9
+2. Revisi admin cabang = 10, 11, 12
+3. Buat operator = 13, 14, 15
+4. Revisi operator = 16, 17, 18
+5. Buat design = 19, 20, 21
+
+
 Kekurangan Admin Pusat
 1. Sinkronisasi side
 2. Tambah filter cabang di dashboard
+3. Status Progress pusat ditambahkan, saat laporan masuk status nya : verifikasi, saat di proses : diproses, menunggu status dikirim : kirim notifikasi, selesai kirim notifikasi : selesai
+4. Halaman kirim notifikasi : muncul jumlah notifikasi yang perlu dikirim
