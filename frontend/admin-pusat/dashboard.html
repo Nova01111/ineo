@@ -19,7 +19,7 @@
     }
     body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
 
-    /* SIDEBAR */
+    /* ── SIDEBAR ── */
     .sidebar { width: var(--sidebar-w); background: var(--navy); display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 50; }
     .sidebar-logo { padding: 1.375rem 1.375rem 1.125rem; border-bottom: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; gap: 10px; }
     .logo-icon { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, var(--blue), var(--blue-acc)); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -42,16 +42,52 @@
     .btn-logout { margin-top: 4px; font-size: 11px; color: rgba(255,100,100,0.7); cursor: pointer; background: none; border: none; padding: 0; font-family: 'DM Sans', sans-serif; transition: color .15s; }
     .btn-logout:hover { color: #f87171; }
 
-    /* MAIN */
+    /* ── MAIN ── */
     .main { flex: 1; margin-left: var(--sidebar-w); display: flex; flex-direction: column; min-height: 100vh; }
     .topbar { background: var(--white); border-bottom: 1px solid var(--border); height: var(--topbar-h); padding: 0 1.75rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; }
     .topbar-left { display: flex; flex-direction: column; gap: 1px; }
     .topbar-title { font-size: 15px; font-weight: 600; color: var(--text); }
     .topbar-sub   { font-size: 11.5px; color: var(--text-3); }
-
     .content { padding: 1.75rem; flex: 1; }
 
-    /* METRICS */
+    /* ── FILTER CARD ── */
+    .filter-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 1.25rem; }
+    .filter-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .filter-group { display: flex; align-items: center; gap: 6px; }
+    .filter-divider { width: 1px; height: 24px; background: var(--border); flex-shrink: 0; }
+    .filter-label { font-size: 12px; font-weight: 600; color: var(--text-3); white-space: nowrap; }
+
+    .filter-select {
+      font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500;
+      padding: 5px 28px 5px 10px; border-radius: 7px; border: 1px solid var(--border);
+      background: var(--bg); color: var(--text); cursor: pointer;
+      outline: none; appearance: none; -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 8px center;
+      transition: border-color .15s, background-color .15s;
+    }
+    .filter-select:hover, .filter-select:focus { border-color: var(--blue-acc); background-color: var(--white); }
+    #filter-cabang { min-width: 160px; max-width: 220px; }
+
+    .btn-filter {
+      font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500;
+      padding: 5px 12px; border-radius: 7px; border: 1px solid var(--blue);
+      background: var(--blue); color: white; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 5px; transition: background .15s;
+    }
+    .btn-filter:hover { background: #1248a0; }
+    .btn-filter:disabled { opacity: .6; cursor: not-allowed; }
+    .btn-filter svg { width: 13px; height: 13px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* Chips aktif filter */
+    .filter-chips { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 8px; min-height: 24px; }
+    .chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 99px; white-space: nowrap; }
+    .chip-periode { background: var(--blue-lt); color: var(--blue); border: 1px solid #bfdbfe; }
+    .chip-cabang  { background: var(--green-lt); color: var(--green); border: 1px solid var(--green-bdr); }
+    .chip-semua   { background: var(--border-2); color: var(--text-3); border: 1px solid var(--border); }
+    .chip svg { width: 10px; height: 10px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* ── METRICS ── */
     .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
     .metric { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.125rem 1.25rem; }
     .metric-label { font-size: 11.5px; font-weight: 500; color: var(--text-3); margin-bottom: 6px; }
@@ -62,23 +98,21 @@
     .metric-val.red   { color: var(--red); }
     .metric-sub { font-size: 11px; color: var(--text-3); margin-top: 5px; }
 
-    /* CARDS */
+    /* ── CARDS ── */
     .card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; }
     .card-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; gap: 12px; flex-wrap: wrap; }
     .card-title { font-size: 13.5px; font-weight: 600; color: var(--text); }
     .card-sub   { font-size: 12px; color: var(--text-3); }
-
-    /* TWO COLUMN */
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 
-    /* TABLE */
+    /* ── TABLE ── */
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
     th { text-align: left; padding: 8px 12px; font-size: 10.5px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid var(--border-2); background: var(--bg); }
     td { padding: 10px 12px; border-bottom: 1px solid var(--border-2); color: var(--text-2); vertical-align: middle; }
     tr:last-child td { border-bottom: none; }
     tr:hover td { background: var(--bg); }
 
-    /* BADGES */
+    /* ── BADGES ── */
     .badge { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 600; }
     .b-draft     { background: var(--border-2); color: var(--text-3); }
     .b-terkirim  { background: var(--blue-lt); color: var(--blue); border: 1px solid #bfdbfe; }
@@ -87,98 +121,35 @@
     .b-dibayar   { background: var(--green-lt); color: var(--green); border: 1px solid var(--green-bdr); }
     .b-pending   { background: var(--amber-lt); color: var(--amber); border: 1px solid var(--amber-bdr); }
 
-    /* BUTTON */
-    .btn { font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; padding: 6px 13px; border-radius: 7px; border: 1px solid var(--border); background: var(--white); color: var(--text-2); cursor: pointer; transition: background .15s; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
-    .btn:hover { background: var(--bg); color: var(--text); }
-    .btn-blue { background: var(--blue); color: white; border-color: var(--blue); }
-    .btn-blue:hover { background: #1248a0; color: white; }
-    .btn-sm { font-size: 11.5px; padding: 5px 10px; }
-
-    /* FILTER PERIODE */
-    .filter-periode { display: flex; align-items: center; gap: 6px; }
-    .filter-select {
-      font-family: 'DM Sans', sans-serif;
-      font-size: 12px;
-      font-weight: 500;
-      padding: 5px 28px 5px 10px;
-      border-radius: 7px;
-      border: 1px solid var(--border);
-      background: var(--bg);
-      color: var(--text);
-      cursor: pointer;
-      outline: none;
-      appearance: none;
-      -webkit-appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 8px center;
-      transition: border-color .15s, background-color .15s;
-    }
-    .filter-select:hover { border-color: var(--blue-acc); background-color: var(--white); }
-    .filter-select:focus { border-color: var(--blue-acc); background-color: var(--white); }
-    .btn-filter {
-      font-family: 'DM Sans', sans-serif;
-      font-size: 12px;
-      font-weight: 500;
-      padding: 5px 12px;
-      border-radius: 7px;
-      border: 1px solid var(--blue);
-      background: var(--blue);
-      color: white;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      transition: background .15s;
-    }
-    .btn-filter:hover { background: #1248a0; }
-    .btn-filter:disabled { opacity: .6; cursor: not-allowed; }
-    .btn-filter svg { width: 13px; height: 13px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    .filter-label-result {
-      font-size: 11.5px;
-      color: var(--text-3);
-      background: var(--border-2);
-      padding: 3px 9px;
-      border-radius: 99px;
-      font-weight: 500;
-    }
-
-    /* AKTIVITAS */
+    /* ── AKTIVITAS ── */
     .act-item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border-2); }
     .act-item:last-child { border-bottom: none; }
     .act-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
     .act-text { font-size: 13px; color: var(--text-2); line-height: 1.5; flex: 1; }
     .act-time { font-size: 11.5px; color: var(--text-3); margin-top: 2px; }
 
-    /* STATUS CABANG */
+    /* ── STATUS CABANG ── */
     .cabang-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border-2); }
     .cabang-row:last-child { border-bottom: none; }
     .cabang-nama { font-size: 13px; font-weight: 500; color: var(--text); }
     .cabang-sub  { font-size: 11.5px; color: var(--text-3); margin-top: 2px; }
 
-    /* STATE */
+    /* ── STATE & SPINNER ── */
     .state-box { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 1rem; gap: 8px; text-align: center; }
     .state-box svg { width: 36px; height: 36px; stroke: var(--text-3); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
     .state-title { font-size: 13.5px; font-weight: 600; color: var(--text-2); }
     .state-sub   { font-size: 12.5px; color: var(--text-3); }
-
     .spinner-wrap { display: flex; align-items: center; justify-content: center; padding: 2.5rem; }
     .spinner { width: 24px; height: 24px; border: 2.5px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin .7s linear infinite; }
 
-    /* Metric skeleton saat loading */
-    .metric-skeleton { display: inline-block; width: 80px; height: 26px; background: linear-gradient(90deg, var(--border-2) 25%, var(--border) 50%, var(--border-2) 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; border-radius: 5px; }
-    .metric-skeleton.sm { width: 48px; height: 26px; }
+    .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--navy); color: white; padding: 10px 16px; border-radius: 9px; font-size: 13px; display: none; z-index: 999; box-shadow: 0 4px 16px rgba(0,0,0,0.18); }
 
-    .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--navy); color: white; padding: 10px 16px; border-radius: 9px; font-size: 13px; display: none; z-index: 999; }
-
-    @keyframes spin    { to { transform: rotate(360deg); } }
-    @keyframes shimmer { to { background-position: -200% 0; } }
-    @keyframes fadeUp  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
 
-<!-- SIDEBAR -->
+<!-- ── SIDEBAR ── -->
 <div class="sidebar">
   <div class="sidebar-logo">
     <div class="logo-icon">
@@ -216,7 +187,7 @@
   </div>
 </div>
 
-<!-- MAIN -->
+<!-- ── MAIN ── -->
 <div class="main">
   <div class="topbar">
     <div class="topbar-left">
@@ -227,11 +198,13 @@
 
   <div class="content">
 
-    <!-- FILTER PERIODE — satu titik kontrol untuk seluruh halaman -->
-    <div class="card" style="margin-bottom:1.25rem; padding: 1rem 1.25rem;">
-      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-        <span style="font-size:12.5px; font-weight:600; color:var(--text-2);">Periode:</span>
-        <div class="filter-periode">
+    <!-- ══ FILTER CARD ══ -->
+    <div class="filter-card">
+      <div class="filter-row">
+
+        <!-- Grup: Periode -->
+        <span class="filter-label">Periode:</span>
+        <div class="filter-group">
           <select class="filter-select" id="filter-bulan">
             <option value="1">Januari</option><option value="2">Februari</option>
             <option value="3">Maret</option><option value="4">April</option>
@@ -241,16 +214,35 @@
             <option value="11">November</option><option value="12">Desember</option>
           </select>
           <select class="filter-select" id="filter-tahun"></select>
-          <button class="btn-filter" id="btn-terapkan" onclick="terapkanFilter()">
-            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            Tampilkan
-          </button>
         </div>
-        <span class="filter-label-result" id="label-periode">-</span>
+
+        <div class="filter-divider"></div>
+
+        <!-- Grup: Cabang -->
+        <span class="filter-label">Cabang:</span>
+        <div class="filter-group">
+          <!--
+            Opsi "Semua Cabang" selalu ada (value="").
+            Opsi cabang spesifik diisi dinamis dari API saat halaman load.
+            Jika cabang berhasil dimuat, select tampil normal.
+            Jika gagal (jaringan / belum ada data), select tetap ada dengan opsi "Semua Cabang".
+          -->
+          <select class="filter-select" id="filter-cabang">
+            <option value="">Semua Cabang</option>
+          </select>
+        </div>
+
+        <button class="btn-filter" id="btn-terapkan" onclick="terapkanFilter()">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Tampilkan
+        </button>
       </div>
+
+      <!-- Chips aktif — tampil setelah filter diterapkan -->
+      <div class="filter-chips" id="filter-chips"></div>
     </div>
 
-    <!-- METRICS -->
+    <!-- ══ METRICS ══ -->
     <div class="metrics">
       <div class="metric">
         <div class="metric-label">Laporan Masuk</div>
@@ -274,10 +266,11 @@
       </div>
     </div>
 
-    <!-- RINGKASAN -->
+    <!-- ══ RINGKASAN LAPORAN ══ -->
     <div class="card" style="margin-bottom:1rem;">
       <div class="card-hdr">
         <span class="card-title">Ringkasan Laporan</span>
+        <span class="card-sub" id="card-ringkasan-sub">-</span>
       </div>
       <div id="tbl-ringkasan">
         <div class="spinner-wrap"><div class="spinner"></div></div>
@@ -285,7 +278,7 @@
     </div>
 
     <div class="grid-2">
-      <!-- Aktivitas -->
+      <!-- Aktivitas Terbaru -->
       <div class="card">
         <div class="card-hdr"><span class="card-title">Aktivitas Terbaru</span></div>
         <div id="aktivitas-list">
@@ -293,7 +286,7 @@
         </div>
       </div>
 
-      <!-- Status konfirmasi cabang -->
+      <!-- Status Konfirmasi Cabang -->
       <div class="card">
         <div class="card-hdr"><span class="card-title">Status Konfirmasi Cabang</span></div>
         <div id="status-cabang">
@@ -301,27 +294,34 @@
         </div>
       </div>
     </div>
-  </div>
-</div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
 
 <div class="toast" id="toast"></div>
 
+<!-- ── Shared auth helper — pastikan path ini sesuai dengan struktur proyekmu ── -->
 <script src="/shared/auth.js"></script>
+
 <script>
+  // ─────────────────────────────────────────────────────────────────
+  //  Guard & init user
+  // ─────────────────────────────────────────────────────────────────
   if (!requireAuth("admin_pusat")) throw new Error("Unauthorized");
   initUserInfo();
 
-  const BLN = ["","Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+  const BLN = ["","Januari","Februari","Maret","April","Mei","Juni",
+               "Juli","Agustus","September","Oktober","November","Desember"];
   const now  = new Date();
 
-  // ── Init filter dropdown ──────────────────────────────────────────────────
-  (function initFilter() {
-    const selBulan = document.getElementById("filter-bulan");
-    const selTahun = document.getElementById("filter-tahun");
+  // ─────────────────────────────────────────────────────────────────
+  //  Inisialisasi dropdown Periode
+  // ─────────────────────────────────────────────────────────────────
+  (function initFilterPeriode() {
+    document.getElementById("filter-bulan").value = now.getMonth() + 1;
 
-    selBulan.value = now.getMonth() + 1;
-
-    const tahunNow = now.getFullYear();
+    const selTahun  = document.getElementById("filter-tahun");
+    const tahunNow  = now.getFullYear();
     for (let y = tahunNow; y >= tahunNow - 10; y--) {
       const opt = document.createElement("option");
       opt.value = y; opt.textContent = y;
@@ -333,37 +333,119 @@
   document.getElementById("tgl-sekarang").textContent =
     `${now.getDate()} ${BLN[now.getMonth()+1]} ${now.getFullYear()}`;
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────
+  //  Muat daftar cabang ke dropdown
+  //  GET /admin-pusat/cabang  → { success: true, data: [{ id, nama_cabang }] }
+  // ─────────────────────────────────────────────────────────────────
+  async function loadCabangOptions() {
+    try {
+      const res = await apiFetch("/admin-pusat/cabang");
+      if (!res?.success || !Array.isArray(res.data)) return;
+
+      const sel = document.getElementById("filter-cabang");
+      res.data.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c.id;
+        // Sesuaikan nama field dengan respons API-mu (nama_cabang / nama / dll)
+        opt.textContent = c.nama_cabang || c.nama;
+        sel.appendChild(opt);
+      });
+    } catch (_) {
+      // Gagal muat cabang — dropdown tetap tampil dengan opsi "Semua Cabang"
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  //  Toast
+  // ─────────────────────────────────────────────────────────────────
   function showToast(msg) {
     const t = document.getElementById("toast");
     t.textContent = msg; t.style.display = "block";
     setTimeout(() => t.style.display = "none", 3000);
   }
 
+  // ─────────────────────────────────────────────────────────────────
+  //  Chips aktif filter
+  // ─────────────────────────────────────────────────────────────────
+  function renderChips(bulan, tahun, cabangId) {
+    const wrap     = document.getElementById("filter-chips");
+    const selCabang = document.getElementById("filter-cabang");
+    const namaCabang = cabangId
+      ? selCabang.options[selCabang.selectedIndex]?.textContent || ""
+      : null;
+
+    wrap.innerHTML = `
+      <span class="chip chip-periode">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        ${BLN[bulan]} ${tahun}
+      </span>
+      ${namaCabang
+        ? `<span class="chip chip-cabang">
+             <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+               <polyline points="9 22 9 12 15 12 15 22"/>
+             </svg>
+             ${namaCabang}
+           </span>`
+        : `<span class="chip chip-semua">Semua Cabang</span>`
+      }
+    `;
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  //  Loading state
+  // ─────────────────────────────────────────────────────────────────
   function setMetricLoading() {
     ["m-laporan","m-gaji","m-tek-dibayar","m-konfirmasi"].forEach(id => {
       document.getElementById(id).innerHTML =
         `<div class="spinner" style="width:20px;height:20px;margin-top:4px"></div>`;
     });
+  }
+
+  function setSectionLoading() {
+    document.getElementById("tbl-ringkasan").innerHTML =
+      `<div class="spinner-wrap"><div class="spinner"></div></div>`;
+    document.getElementById("aktivitas-list").innerHTML =
+      `<div class="spinner-wrap"><div class="spinner"></div></div>`;
     document.getElementById("status-cabang").innerHTML =
       `<div class="spinner-wrap"><div class="spinner"></div></div>`;
   }
 
-  function updateLabelPeriode(bulan, tahun) {
-    const label = `${BLN[bulan]} ${tahun}`;
-    document.getElementById("label-periode").textContent = label;
-    document.getElementById("m-gaji-sub").textContent    = label;
-    document.getElementById("m-tek-sub").textContent     = label;
+  // ─────────────────────────────────────────────────────────────────
+  //  Update sub-label metric
+  // ─────────────────────────────────────────────────────────────────
+  function updateMetricSub(bulan, tahun, cabangId) {
+    const selCabang  = document.getElementById("filter-cabang");
+    const namaCabang = cabangId
+      ? selCabang.options[selCabang.selectedIndex]?.textContent || ""
+      : "Semua Cabang";
+    const label = `${BLN[bulan]} ${tahun} · ${namaCabang}`;
+
+    document.getElementById("m-gaji-sub").textContent = label;
+    document.getElementById("m-tek-sub").textContent  = label;
+
+    // Sub-header card ringkasan
+    document.getElementById("card-ringkasan-sub").textContent = label;
   }
 
-  // ── Render helpers ────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────
+  //  Format rupiah
+  // ─────────────────────────────────────────────────────────────────
+  function rupiah(n) {
+    return "Rp " + Number(n).toLocaleString("id-ID");
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  //  Render metrics
+  // ─────────────────────────────────────────────────────────────────
   function renderMetrics(d) {
     document.getElementById("m-laporan").textContent     = d.laporan_masuk;
     document.getElementById("m-gaji").textContent        = rupiah(d.total_gaji_dibayar);
     document.getElementById("m-tek-dibayar").textContent = d.teknisi_dibayar;
     document.getElementById("m-konfirmasi").textContent  = d.menunggu_konfirmasi;
 
-    // Badge sidebar — selalu update agar sesuai periode yang dipilih
     const badge = document.getElementById("badge-laporan");
     if (d.laporan_masuk > 0) {
       badge.textContent = d.laporan_masuk;
@@ -373,11 +455,16 @@
     }
   }
 
+  // ─────────────────────────────────────────────────────────────────
+  //  Render tabel ringkasan
+  // ─────────────────────────────────────────────────────────────────
   function renderRingkasan(ringkasan, bulan, tahun) {
     const tbl = document.getElementById("tbl-ringkasan");
     if (!ringkasan || ringkasan.length === 0) {
       tbl.innerHTML = `<div class="state-box">
-        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
         <div class="state-title">Belum ada laporan untuk ${BLN[bulan]} ${tahun}</div>
         <div class="state-sub">Laporan dari admin cabang akan muncul di sini</div>
       </div>`;
@@ -399,8 +486,8 @@
         <td><strong>${r.nama_teknisi}</strong></td>
         <td>${r.nama_cabang}</td>
         <td>${r.sub_project || "-"}</td>
-        <td>${r.total_gaji ? rupiah(r.total_gaji) : "-"}</td>
-        <td>${r.gaji_bersih ? `<strong style="color:var(--green)">${rupiah(r.gaji_bersih)}</strong>` : "-"}</td>
+        <td>${r.total_gaji    ? rupiah(r.total_gaji)   : "-"}</td>
+        <td>${r.gaji_bersih   ? `<strong style="color:var(--green)">${rupiah(r.gaji_bersih)}</strong>` : "-"}</td>
         <td>${laporanBadge}</td>
         <td>${bayarBadge}</td>
       </tr>`;
@@ -409,9 +496,17 @@
     tbl.innerHTML = html;
   }
 
+  // ─────────────────────────────────────────────────────────────────
+  //  Render aktivitas terbaru
+  // ─────────────────────────────────────────────────────────────────
   function renderAktivitas(ringkasan, bulan, tahun) {
     const akt = document.getElementById("aktivitas-list");
-    const warna = { selesai: "var(--green)", terkirim: "var(--blue-acc)", diproses: "var(--amber)", dibayar: "var(--green)" };
+    const warna = {
+      selesai:  "var(--green)",
+      terkirim: "var(--blue-acc)",
+      diproses: "var(--amber)",
+      dibayar:  "var(--green)"
+    };
     const items = (ringkasan || []).filter(r => r.status_laporan);
     if (!items.length) {
       akt.innerHTML = `<div class="state-box" style="padding:1.5rem">
@@ -423,12 +518,18 @@
       <div class="act-item">
         <div class="act-dot" style="background:${warna[r.status_laporan] || "var(--text-3)"}"></div>
         <div>
-          <div class="act-text">Laporan <strong>${r.nama_teknisi}</strong> (${r.nama_cabang}) — <strong>${r.status_laporan}</strong></div>
+          <div class="act-text">Laporan <strong>${r.nama_teknisi}</strong>
+            (${r.nama_cabang}) — <strong>${r.status_laporan}</strong>
+          </div>
           <div class="act-time">${BLN[bulan]} ${tahun}</div>
         </div>
       </div>`).join("");
   }
 
+  // ─────────────────────────────────────────────────────────────────
+  //  Render status konfirmasi cabang
+  //  Jika filter cabang spesifik dipilih, hanya cabang itu yang tampil.
+  // ─────────────────────────────────────────────────────────────────
   function renderStatusCabang(status_cabang) {
     const cabDiv = document.getElementById("status-cabang");
     if (!status_cabang || status_cabang.length === 0) {
@@ -453,20 +554,35 @@
     }).join("");
   }
 
-  // ── Core load — dipakai baik saat init maupun saat filter berubah ─────────
-  async function loadDashboard(bulan, tahun) {
-    // Tampilkan loading di semua section
+  // ─────────────────────────────────────────────────────────────────
+  //  Core load dashboard
+  //
+  //  Parameter cabangId:
+  //    - ""  (string kosong) → tampilkan semua cabang (tidak kirim param cabang_id)
+  //    - "5" (string angka)  → filter hanya cabang dengan id=5
+  //
+  //  Endpoint yang dipanggil:
+  //    Tanpa filter cabang : GET /admin-pusat/dashboard?bulan=5&tahun=2026
+  //    Dengan filter cabang: GET /admin-pusat/dashboard?bulan=5&tahun=2026&cabang_id=5
+  //
+  //  Pastikan backend menerima query param opsional `cabang_id` dan memfilter data
+  //  yang dikembalikan (metrics, ringkasan, status_cabang) hanya untuk cabang tersebut.
+  // ─────────────────────────────────────────────────────────────────
+  async function loadDashboard(bulan, tahun, cabangId = "") {
     setMetricLoading();
-    document.getElementById("tbl-ringkasan").innerHTML =
-      `<div class="spinner-wrap"><div class="spinner"></div></div>`;
-    document.getElementById("aktivitas-list").innerHTML =
-      `<div class="spinner-wrap"><div class="spinner"></div></div>`;
+    setSectionLoading();
+    renderChips(bulan, tahun, cabangId);
+    updateMetricSub(bulan, tahun, cabangId);
 
-    // Update label periode
-    updateLabelPeriode(bulan, tahun);
+    // Susun query string
+    let qs = `bulan=${bulan}&tahun=${tahun}`;
+    if (cabangId) qs += `&cabang_id=${encodeURIComponent(cabangId)}`;
 
-    const data = await apiFetch(`/admin-pusat/dashboard?bulan=${bulan}&tahun=${tahun}`);
-    if (!data?.success) { showToast("Gagal memuat dashboard"); return; }
+    const data = await apiFetch(`/admin-pusat/dashboard?${qs}`);
+    if (!data?.success) {
+      showToast("Gagal memuat dashboard");
+      return;
+    }
 
     const d = data.data;
     renderMetrics(d);
@@ -475,15 +591,29 @@
     renderStatusCabang(d.status_cabang);
   }
 
-  // ── Tombol Tampilkan ──────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────
+  //  Tombol Tampilkan
+  // ─────────────────────────────────────────────────────────────────
   function terapkanFilter() {
-    const bulan = parseInt(document.getElementById("filter-bulan").value);
-    const tahun = parseInt(document.getElementById("filter-tahun").value);
-    loadDashboard(bulan, tahun);
+    const bulan    = parseInt(document.getElementById("filter-bulan").value);
+    const tahun    = parseInt(document.getElementById("filter-tahun").value);
+    const cabangId = document.getElementById("filter-cabang").value; // "" = semua
+
+    const btn = document.getElementById("btn-terapkan");
+    btn.disabled = true;
+    loadDashboard(bulan, tahun, cabangId).finally(() => btn.disabled = false);
   }
 
-  // ── Load pertama kali dengan bulan/tahun sekarang ─────────────────────────
-  loadDashboard(now.getMonth() + 1, now.getFullYear());
+  // ─────────────────────────────────────────────────────────────────
+  //  Inisialisasi halaman
+  // ─────────────────────────────────────────────────────────────────
+  (async function init() {
+    // 1. Muat opsi cabang ke dropdown (jalankan paralel dengan load pertama)
+    await loadCabangOptions();
+
+    // 2. Load dashboard bulan/tahun sekarang, semua cabang
+    loadDashboard(now.getMonth() + 1, now.getFullYear(), "");
+  })();
 </script>
 </body>
 </html>
