@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Teknisi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #f4f6fa;
+      --white:     #ffffff;
+      --navy:      #0f1f38;
+      --blue:      #185FA5;
+      --blue-lt:   #eff6ff;
+      --blue-acc:  #3b9eff;
+      --text:      #1e293b;
+      --text-2:    #64748b;
+      --text-3:    #94a3b8;
+      --border:    #e2e8f0;
+      --border-2:  #f1f5f9;
+      --green:     #16a34a;
+      --green-lt:  #f0fdf4;
+      --green-bdr: #bbf7d0;
+      --amber:     #b45309;
+      --amber-lt:  #fffbeb;
+      --amber-bdr: #fde68a;
+      --red:       #dc2626;
+      --red-lt:    #fef2f2;
+      --red-bdr:   #fecaca;
+      --sidebar-w: 220px;
+      --topbar-h:  56px;
+      --radius:    10px;
+    }
+
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+
+    /* ═══════ SIDEBAR ═══════ */
+    .sidebar { width: var(--sidebar-w); background: var(--navy); display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 50; }
+    .sidebar-logo { padding: 1.375rem 1.25rem 1.125rem; border-bottom: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; gap: 10px; }
+    .logo-icon { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, var(--blue), var(--blue-acc)); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .logo-icon svg { width: 17px; height: 17px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .logo-text h2 { font-size: 13.5px; font-weight: 600; color: #fff; }
+    .logo-text p  { font-size: 10.5px; color: rgba(255,255,255,0.4); margin-top: 1px; }
+    .nav-section  { padding: 1.125rem 0 .375rem; }
+    .nav-label { font-size: 9.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,0.25); padding: 0 1.25rem; margin-bottom: .375rem; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 1.25rem; font-size: 13px; color: rgba(255,255,255,0.5); text-decoration: none; border-left: 2px solid transparent; transition: background .15s, color .15s; }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.85); }
+    .nav-item.active { color: #fff; background: rgba(59,158,255,0.12); border-left-color: var(--blue-acc); font-weight: 500; }
+    .nav-item .nav-icon { width: 16px; height: 16px; flex-shrink: 0; opacity: .7; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .nav-item.active .nav-icon { opacity: 1; }
+    .user-box { margin-top: auto; padding: 1rem 1.25rem; border-top: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; gap: 10px; }
+    .avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--blue), var(--blue-acc)); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: white; flex-shrink: 0; }
+    .user-name { font-size: 13px; font-weight: 500; color: #fff; }
+    .user-role { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 1px; }
+    .btn-logout { margin-top: 4px; font-size: 11px; color: rgba(255,100,100,0.7); cursor: pointer; background: none; border: none; padding: 0; font-family: 'DM Sans', sans-serif; transition: color .15s; }
+    .btn-logout:hover { color: #f87171; }
+
+    /* ═══════ MAIN ═══════ */
+    .main { flex: 1; margin-left: var(--sidebar-w); display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar { background: var(--white); border-bottom: 1px solid var(--border); height: var(--topbar-h); padding: 0 1.75rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; }
+    .topbar-title { font-size: 15px; font-weight: 600; color: var(--text); }
+    .topbar-date  { font-size: 12px; color: var(--text-3); font-family: 'DM Mono', monospace; }
+
+    /* ═══════ CONTENT ═══════ */
+    .content { padding: 1.75rem; flex: 1; }
+
+    /* greeting */
+    .greeting { margin-bottom: 1.75rem; animation: fadeUp .4s ease both; }
+    .greeting h1 { font-size: 20px; font-weight: 600; color: var(--text); }
+    .greeting p  { font-size: 13px; color: var(--text-2); margin-top: 3px; }
+
+    /* ── Gaji bulan ini — hero card ── */
+    .hero-card {
+      background: linear-gradient(135deg, var(--navy) 0%, #1a3a6b 100%);
+      border-radius: 14px; padding: 1.75rem 2rem;
+      margin-bottom: 1.5rem; position: relative; overflow: hidden;
+      animation: fadeUp .4s .05s ease both;
+    }
+    .hero-card::before {
+      content: ''; position: absolute; top: -40px; right: -40px;
+      width: 200px; height: 200px; border-radius: 50%;
+      background: rgba(59,158,255,0.08);
+    }
+    .hero-card::after {
+      content: ''; position: absolute; bottom: -60px; right: 60px;
+      width: 140px; height: 140px; border-radius: 50%;
+      background: rgba(59,158,255,0.05);
+    }
+    .hero-label { font-size: 11.5px; font-weight: 500; color: rgba(255,255,255,0.45); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 8px; }
+    .hero-amount { font-size: 36px; font-weight: 600; color: #fff; font-family: 'DM Mono', monospace; letter-spacing: -.5px; line-height: 1; margin-bottom: 4px; }
+    .hero-sub { font-size: 12.5px; color: rgba(255,255,255,0.4); margin-bottom: 1.25rem; }
+    .hero-meta { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+    .hero-meta-item { }
+    .hero-meta-label { font-size: 10.5px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 3px; }
+    .hero-meta-val   { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.8); }
+    .hero-meta-val.green { color: #4ade80; }
+    .hero-meta-val.red   { color: #f87171; }
+
+    /* status badge di hero */
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      position: absolute; top: 1.5rem; right: 1.75rem;
+      font-size: 11.5px; font-weight: 600; padding: 5px 12px; border-radius: 99px;
+    }
+    .sp-dibayar  { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.25); }
+    .sp-diproses { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.25); }
+    .sp-terkirim { background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.25); }
+    .sp-draft    { background: rgba(148,163,184,0.15); color: #94a3b8; border: 1px solid rgba(148,163,184,0.2); }
+    .sp-belum    { background: rgba(148,163,184,0.15); color: #94a3b8; border: 1px solid rgba(148,163,184,0.2); }
+
+    /* hero kosong */
+    .hero-empty { text-align: center; padding: .5rem 0 .75rem; }
+    .hero-empty p { font-size: 13.5px; color: rgba(255,255,255,0.4); }
+    .hero-empty a { display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; font-size: 12.5px; font-weight: 500; color: var(--blue-acc); text-decoration: none; }
+
+    /* ── Metric cards ── */
+    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 1.5rem; }
+    .mc { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.125rem 1.25rem; position: relative; overflow: hidden; animation: fadeUp .4s ease both; }
+    .mc:nth-child(1) { animation-delay: .10s; }
+    .mc:nth-child(2) { animation-delay: .15s; }
+    .mc:nth-child(3) { animation-delay: .20s; }
+    .mc::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 3px 0 0 3px; }
+    .mc.c-green::before  { background: var(--green); }
+    .mc.c-red::before    { background: var(--red); }
+    .mc.c-blue::before   { background: var(--blue); }
+    .mc-label { font-size: 11px; color: var(--text-3); font-weight: 500; letter-spacing: .03em; margin-bottom: 6px; text-transform: uppercase; }
+    .mc-val   { font-size: 24px; font-weight: 600; color: var(--text); line-height: 1; font-family: 'DM Mono', monospace; }
+    .mc-val.green { color: var(--green); }
+    .mc-val.red   { color: var(--red); }
+    .mc-val.blue  { color: var(--blue); }
+    .mc-sub { font-size: 11.5px; color: var(--text-3); margin-top: 5px; }
+
+    /* ── Timeline status laporan ── */
+    .card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; animation: fadeUp .4s .3s ease both; }
+    .card-hdr { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-2); }
+    .card-title { font-size: 13.5px; font-weight: 600; color: var(--text); }
+    .card-sub   { font-size: 11.5px; color: var(--text-3); margin-top: 2px; }
+
+    .timeline { padding: 1.25rem; display: flex; flex-direction: column; gap: 0; }
+    .tl-item { display: flex; gap: 14px; padding-bottom: 1.25rem; position: relative; }
+    .tl-item:last-child { padding-bottom: 0; }
+    .tl-item:not(:last-child)::before {
+      content: ''; position: absolute; left: 11px; top: 24px; bottom: 0;
+      width: 2px; background: var(--border-2);
+    }
+    .tl-dot { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+    .tl-dot svg { width: 12px; height: 12px; stroke: white; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .tl-dot.done   { background: var(--green); }
+    .tl-dot.active { background: var(--blue); }
+    .tl-dot.pending { background: var(--border); }
+    .tl-dot.pending svg { stroke: var(--text-3); }
+    .tl-body { flex: 1; }
+    .tl-title  { font-size: 13px; font-weight: 500; color: var(--text); }
+    .tl-detail { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+    .tl-time   { font-size: 11px; color: var(--text-3); margin-top: 3px; font-family: 'DM Mono', monospace; }
+
+    .empty-timeline { text-align: center; padding: 2rem; color: var(--text-3); font-size: 13px; }
+
+    /* state */
+    .spinner-wrap { display: flex; align-items: center; justify-content: center; padding: 2.5rem; }
+    .spinner { width: 26px; height: 26px; border: 2.5px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin .7s linear infinite; }
+
+    /* toast */
+    .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--navy); color: white; padding: 10px 16px; border-radius: 9px; font-size: 13px; display: none; z-index: 999; max-width: 320px; }
+
+    @keyframes spin   { to { transform: rotate(360deg); } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+
+<!-- ═══════ SIDEBAR ═══════ -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
+    </div>
+    <div class="logo-text"><h2>Rekap Gaji</h2><p>Teknisi</p></div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Menu</div>
+    <a class="nav-item active" href="dashboard.html">
+      <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </a>
+    <a class="nav-item" href="riwayat-gaji.html">
+      <svg class="nav-icon" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Riwayat Gaji
+    </a>
+  </div>
+  <div class="user-box">
+    <div class="avatar" id="user-avatar">?</div>
+    <div>
+      <div class="user-name" id="user-nama">-</div>
+      <div class="user-role">Teknisi</div>
+      <button class="btn-logout" onclick="logout()">Keluar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ MAIN ═══════ -->
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-title">Dashboard</span>
+    <span class="topbar-date" id="tgl-sekarang"></span>
+  </div>
+
+  <div class="content">
+
+    <!-- Greeting -->
+    <div class="greeting">
+      <h1 id="greeting-text">Selamat datang</h1>
+      <p id="greeting-sub">Memuat data gaji Anda...</p>
+    </div>
+
+    <!-- Hero: gaji bulan ini -->
+    <div class="hero-card" id="hero-card">
+      <div class="spinner-wrap"><div class="spinner" style="border-color:rgba(255,255,255,0.15);border-top-color:white"></div></div>
+    </div>
+
+    <!-- Metric cards: ringkasan tahun -->
+    <div class="metrics">
+      <div class="mc c-green">
+        <div class="mc-label">Total Gaji Bersih Tahun Ini</div>
+        <div class="mc-val green" id="mc-gaji-bersih">—</div>
+        <div class="mc-sub" id="mc-gaji-sub">—</div>
+      </div>
+      <div class="mc c-red">
+        <div class="mc-label">Total Potongan Tahun Ini</div>
+        <div class="mc-val red" id="mc-potongan">—</div>
+        <div class="mc-sub">Seluruh potongan</div>
+      </div>
+      <div class="mc c-blue">
+        <div class="mc-label">Bulan Terbayar</div>
+        <div class="mc-val blue" id="mc-bulan">—</div>
+        <div class="mc-sub" id="mc-bulan-sub">—</div>
+      </div>
+    </div>
+
+    <!-- Timeline status laporan bulan ini -->
+    <div class="card">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Status Laporan Bulan Ini</div>
+          <div class="card-sub" id="card-sub">—</div>
+        </div>
+        <a href="riwayat-gaji.html" style="font-size:12px;color:var(--blue);text-decoration:none;font-weight:500">Lihat riwayat →</a>
+      </div>
+      <div id="timeline-wrap">
+        <div class="spinner-wrap"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/shared/auth.js"></script>
+<script>
+  if (!requireAuth("teknisi")) throw new Error("Unauthorized");
+  initUserInfo();
+
+  const now    = new Date();
+  const jam    = now.getHours();
+  const sapaan = jam < 11 ? "Selamat pagi" : jam < 15 ? "Selamat siang" : jam < 18 ? "Selamat sore" : "Selamat malam";
+
+  document.getElementById("tgl-sekarang").textContent =
+    now.toLocaleDateString("id-ID", { weekday:"long", day:"numeric", month:"long", year:"numeric" });
+  document.getElementById("greeting-text").textContent =
+    `${sapaan}, ${getNama() || "Teknisi"} 👋`;
+
+  // ── Load dashboard ────────────────────────────────────────────────────
+  async function loadDashboard() {
+    const data = await apiFetch("/teknisi/dashboard");
+
+    if (!data?.success) {
+      renderHeroError();
+      document.getElementById("greeting-sub").textContent = "Gagal memuat data.";
+      return;
+    }
+
+    const d = data.data;
+    const thn = now.getFullYear();
+    const bln = now.getMonth() + 1;
+
+    document.getElementById("greeting-sub").textContent =
+      d.gaji_bulan_ini
+        ? `Gaji ${BULAN[bln]} ${thn} sudah diproses`
+        : `Belum ada laporan untuk ${BULAN[bln]} ${thn}`;
+
+    document.getElementById("card-sub").textContent =
+      `Periode ${BULAN[bln]} ${thn}`;
+
+    // ── Hero card ──
+    renderHero(d.gaji_bulan_ini, bln, thn);
+
+    // ── Metric cards ──
+    document.getElementById("mc-gaji-bersih").textContent = rupiah(d.total_gaji_tahun ?? 0);
+    document.getElementById("mc-potongan").textContent    = rupiah(d.total_potongan_tahun ?? 0);
+    document.getElementById("mc-bulan").textContent       = d.bulan_terbayar ?? 0;
+    document.getElementById("mc-gaji-sub").textContent    = `Tahun ${thn}`;
+    document.getElementById("mc-bulan-sub").textContent   = `dari 12 bulan tahun ${thn}`;
+
+    // ── Timeline ──
+    renderTimeline(d.gaji_bulan_ini, d.timeline, bln, thn);
+  }
+
+  // ── Render hero card ──────────────────────────────────────────────────
+  function renderHero(g, bln, thn) {
+    const hero = document.getElementById("hero-card");
+
+    if (!g) {
+      hero.innerHTML = `
+        <div class="hero-label">Gaji Bersih ${BULAN[bln]} ${thn}</div>
+        <div class="hero-empty">
+          <p>Laporan belum diinput untuk bulan ini.</p>
+          <p style="margin-top:8px;font-size:12px;color:rgba(255,255,255,0.3)">Hubungi admin cabang Anda jika ada pertanyaan.</p>
+        </div>`;
+      return;
+    }
+
+    const statusMap = {
+      dibayar:  { cls: "sp-dibayar",  label: "✓ Sudah Dibayar" },
+      diproses: { cls: "sp-diproses", label: "⟳ Sedang Diproses" },
+      terkirim: { cls: "sp-terkirim", label: "→ Terkirim ke Admin Pusat" },
+      draft:    { cls: "sp-draft",    label: "✎ Draft" },
+    };
+    const st = statusMap[g.status_laporan] || { cls: "sp-belum", label: g.status_laporan || "—" };
+
+    hero.innerHTML = `
+      <span class="status-pill ${st.cls}">${st.label}</span>
+      <div class="hero-label">Gaji Bersih ${BULAN[bln]} ${thn}</div>
+      <div class="hero-amount">${rupiah(g.gaji_bersih)}</div>
+      <div class="hero-sub">${escHtml(g.nama_provider)} · ${escHtml(g.sub_project)}</div>
+      <div class="hero-meta">
+        <div class="hero-meta-item">
+          <div class="hero-meta-label">Total Gaji</div>
+          <div class="hero-meta-val">${rupiah(g.total_gaji)}</div>
+        </div>
+        <div class="hero-meta-item">
+          <div class="hero-meta-label">Potongan</div>
+          <div class="hero-meta-val red">− ${rupiah(g.total_potongan)}</div>
+        </div>
+        ${g.tgl_transfer ? `
+        <div class="hero-meta-item">
+          <div class="hero-meta-label">Tanggal Transfer</div>
+          <div class="hero-meta-val green">${tglFormat(g.tgl_transfer)}</div>
+        </div>` : ""}
+        <div class="hero-meta-item">
+          <div class="hero-meta-label">Project</div>
+          <div class="hero-meta-val">${escHtml(g.nama_project)}</div>
+        </div>
+      </div>`;
+  }
+
+  function renderHeroError() {
+    document.getElementById("hero-card").innerHTML = `
+      <div class="hero-label">Gaji Bulan Ini</div>
+      <div class="hero-empty">
+        <p style="color:rgba(255,255,255,0.35)">Gagal memuat data. Coba muat ulang halaman.</p>
+      </div>`;
+  }
+
+  // ── Render timeline ───────────────────────────────────────────────────
+  function renderTimeline(gaji, tl, bln, thn) {
+    const wrap = document.getElementById("timeline-wrap");
+
+    if (!tl && !gaji) {
+      wrap.innerHTML = `<div class="empty-timeline">Belum ada laporan untuk ${BULAN[bln]} ${thn}.</div>`;
+      return;
+    }
+
+    const status = gaji?.status_laporan || tl?.status || "";
+
+    // Tentukan tahap mana yang sudah selesai
+    const isDraft    = ["draft","terkirim","diproses","selesai","dibayar"].includes(status);
+    const isKirim    = ["terkirim","diproses","selesai","dibayar"].includes(status);
+    const isDiproses = ["diproses","selesai","dibayar"].includes(status);
+    const isDibayar  = ["selesai","dibayar"].includes(status);
+
+    const steps = [
+      {
+        label:  "Laporan diinput oleh admin cabang",
+        detail: tl?.nama_admin_cabang ? `Oleh: ${escHtml(tl.nama_admin_cabang)}` : "",
+        time:   tl?.created_at ? tglJamFormat(tl.created_at) : "",
+        done:   isDraft,
+        active: !isDraft,
+      },
+      {
+        label:  "Laporan dikirim ke admin pusat",
+        detail: tl?.nama_admin_pusat ? `Tujuan: ${escHtml(tl.nama_admin_pusat)}` : "",
+        time:   "",
+        done:   isKirim,
+        active: isDraft && !isKirim,
+      },
+      {
+        label:  "Rekap gaji diproses admin pusat",
+        detail: "",
+        time:   "",
+        done:   isDiproses,
+        active: isKirim && !isDiproses,
+      },
+      {
+        label:  "Gaji ditransfer",
+        detail: gaji?.tgl_transfer ? `Tanggal: ${tglFormat(gaji.tgl_transfer)}` : "",
+        time:   "",
+        done:   isDibayar,
+        active: isDiproses && !isDibayar,
+      },
+    ];
+
+    wrap.innerHTML = `<div class="timeline">${steps.map(s => `
+      <div class="tl-item">
+        <div class="tl-dot ${s.done ? "done" : s.active ? "active" : "pending"}">
+          <svg viewBox="0 0 24 24">${s.done
+            ? '<polyline points="20 6 9 17 4 12"/>'
+            : s.active
+              ? '<circle cx="12" cy="12" r="4" fill="white" stroke="none"/>'
+              : '<circle cx="12" cy="12" r="3" stroke-width="2"/>'
+          }</svg>
+        </div>
+        <div class="tl-body">
+          <div class="tl-title" style="color:${s.done ? "var(--text)" : s.active ? "var(--blue)" : "var(--text-3)"}">${s.label}</div>
+          ${s.detail ? `<div class="tl-detail">${s.detail}</div>` : ""}
+          ${s.time   ? `<div class="tl-time">${s.time}</div>` : ""}
+        </div>
+      </div>`).join("")}</div>`;
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────
+  function escHtml(str) {
+    return String(str ?? "")
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  loadDashboard();
+</script>
+</body>
+</html>

@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Riwayat Gaji — Teknisi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #f4f6fa;
+      --white:     #ffffff;
+      --navy:      #0f1f38;
+      --blue:      #185FA5;
+      --blue-lt:   #eff6ff;
+      --blue-acc:  #3b9eff;
+      --text:      #1e293b;
+      --text-2:    #64748b;
+      --text-3:    #94a3b8;
+      --border:    #e2e8f0;
+      --border-2:  #f1f5f9;
+      --green:     #16a34a;
+      --green-lt:  #f0fdf4;
+      --green-bdr: #bbf7d0;
+      --amber:     #b45309;
+      --amber-lt:  #fffbeb;
+      --amber-bdr: #fde68a;
+      --red:       #dc2626;
+      --red-lt:    #fef2f2;
+      --red-bdr:   #fecaca;
+      --sidebar-w: 220px;
+      --topbar-h:  56px;
+      --radius:    10px;
+    }
+
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+
+    /* ═══════ SIDEBAR ═══════ */
+    .sidebar { width: var(--sidebar-w); background: var(--navy); display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 50; }
+    .sidebar-logo { padding: 1.375rem 1.25rem 1.125rem; border-bottom: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; gap: 10px; }
+    .logo-icon { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, var(--blue), var(--blue-acc)); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .logo-icon svg { width: 17px; height: 17px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .logo-text h2 { font-size: 13.5px; font-weight: 600; color: #fff; }
+    .logo-text p  { font-size: 10.5px; color: rgba(255,255,255,0.4); margin-top: 1px; }
+    .nav-section  { padding: 1.125rem 0 .375rem; }
+    .nav-label { font-size: 9.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,0.25); padding: 0 1.25rem; margin-bottom: .375rem; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 1.25rem; font-size: 13px; color: rgba(255,255,255,0.5); text-decoration: none; border-left: 2px solid transparent; transition: background .15s, color .15s; }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.85); }
+    .nav-item.active { color: #fff; background: rgba(59,158,255,0.12); border-left-color: var(--blue-acc); font-weight: 500; }
+    .nav-item .nav-icon { width: 16px; height: 16px; flex-shrink: 0; opacity: .7; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .nav-item.active .nav-icon { opacity: 1; }
+    .user-box { margin-top: auto; padding: 1rem 1.25rem; border-top: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; gap: 10px; }
+    .avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--blue), var(--blue-acc)); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: white; flex-shrink: 0; }
+    .user-name { font-size: 13px; font-weight: 500; color: #fff; }
+    .user-role { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 1px; }
+    .btn-logout { margin-top: 4px; font-size: 11px; color: rgba(255,100,100,0.7); cursor: pointer; background: none; border: none; padding: 0; font-family: 'DM Sans', sans-serif; transition: color .15s; }
+    .btn-logout:hover { color: #f87171; }
+
+    /* ═══════ MAIN ═══════ */
+    .main { flex: 1; margin-left: var(--sidebar-w); display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar { background: var(--white); border-bottom: 1px solid var(--border); height: var(--topbar-h); padding: 0 1.75rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; }
+    .topbar-title { font-size: 15px; font-weight: 600; color: var(--text); }
+
+    /* ═══════ CONTENT ═══════ */
+    .content { padding: 1.75rem; flex: 1; }
+
+    /* ── Ringkasan tahun ── */
+    .ringkasan {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 14px; margin-bottom: 1.5rem;
+    }
+    .rs { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; animation: fadeUp .35s ease both; }
+    .rs:nth-child(1) { animation-delay: .05s; }
+    .rs:nth-child(2) { animation-delay: .10s; }
+    .rs:nth-child(3) { animation-delay: .15s; }
+    .rs-label { font-size: 11px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 5px; }
+    .rs-val   { font-size: 20px; font-weight: 600; font-family: 'DM Mono', monospace; }
+    .rs-val.green { color: var(--green); }
+    .rs-val.red   { color: var(--red); }
+    .rs-val.blue  { color: var(--blue); }
+
+    /* ── Filter & card ── */
+    .filter-bar {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      margin-bottom: 1.25rem;
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: .875rem 1.25rem;
+      animation: fadeUp .35s .1s ease both;
+    }
+    .filter-bar label { font-size: 11.5px; font-weight: 500; color: var(--text-2); }
+    .filter-bar select {
+      font-family: 'DM Sans', sans-serif; font-size: 12.5px; color: var(--text);
+      background: var(--bg); border: 1px solid var(--border); border-radius: 7px;
+      padding: 6px 10px; outline: none; cursor: pointer;
+    }
+    .filter-bar select:focus { border-color: var(--blue-acc); }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: 'DM Sans', sans-serif; font-size: 12.5px; font-weight: 500;
+      padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--white); color: var(--text); cursor: pointer; text-decoration: none;
+      transition: background .15s;
+    }
+    .btn:hover { background: var(--bg); }
+    .btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .btn-primary { background: var(--blue); color: white; border-color: var(--blue); }
+    .btn-primary:hover { background: #0f4d8a; }
+
+    .card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; animation: fadeUp .35s .2s ease both; }
+    .card-hdr { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-2); }
+    .card-title { font-size: 13.5px; font-weight: 600; color: var(--text); }
+    .card-count { font-size: 12px; color: var(--text-3); font-family: 'DM Mono', monospace; }
+
+    /* ── Riwayat list ── */
+    .riwayat-list { display: flex; flex-direction: column; }
+    .rw-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px; align-items: center;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border-2);
+      cursor: pointer; transition: background .1s;
+    }
+    .rw-item:last-child { border-bottom: none; }
+    .rw-item:hover { background: #f8fafc; }
+
+    .rw-left { display: flex; align-items: center; gap: 14px; }
+    .rw-bulan-badge {
+      width: 48px; height: 48px; border-radius: 10px; flex-shrink: 0;
+      background: var(--blue-lt); display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 1px;
+    }
+    .rw-bulan-badge .bln { font-size: 10px; font-weight: 600; color: var(--blue); text-transform: uppercase; }
+    .rw-bulan-badge .thn { font-size: 9px; color: var(--text-3); font-family: 'DM Mono', monospace; }
+
+    .rw-info { }
+    .rw-title  { font-size: 13.5px; font-weight: 500; color: var(--text); }
+    .rw-detail { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+
+    .rw-right { text-align: right; }
+    .rw-nominal { font-size: 15px; font-weight: 600; font-family: 'DM Mono', monospace; }
+    .rw-nominal.green { color: var(--green); }
+    .rw-nominal.muted { color: var(--text-3); }
+    .rw-status { margin-top: 4px; }
+
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 6px; font-size: 10.5px; font-weight: 600; white-space: nowrap; }
+    .badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .6; }
+    .b-dibayar  { background: var(--green-lt); color: var(--green); }
+    .b-diproses { background: var(--amber-lt); color: var(--amber); }
+    .b-terkirim { background: var(--blue-lt);  color: #1d4ed8; }
+    .b-draft    { background: var(--border-2); color: var(--text-2); }
+
+    .rw-chevron { color: var(--text-3); }
+    .rw-chevron svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* ── State ── */
+    .state-box { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3.5rem 1rem; gap: 10px; text-align: center; }
+    .state-box svg { width: 38px; height: 38px; stroke: var(--text-3); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .state-title { font-size: 14px; font-weight: 600; color: var(--text-2); }
+    .state-sub   { font-size: 13px; color: var(--text-3); }
+    .spinner-wrap { display: flex; align-items: center; justify-content: center; padding: 3rem; }
+    .spinner { width: 26px; height: 26px; border: 2.5px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin .7s linear infinite; }
+
+    /* ═══════ MODAL SLIP GAJI ═══════ */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(15,31,56,0.55);
+      backdrop-filter: blur(4px); z-index: 200;
+      display: flex; align-items: center; justify-content: center;
+      padding: 1rem; opacity: 0; pointer-events: none; transition: opacity .2s;
+    }
+    .modal-overlay.show { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--white); border-radius: 14px; width: 100%; max-width: 560px;
+      max-height: 88vh; overflow-y: auto;
+      transform: translateY(20px); transition: transform .25s cubic-bezier(.16,1,.3,1);
+      box-shadow: 0 24px 64px rgba(15,31,56,0.2);
+    }
+    .modal-overlay.show .modal { transform: translateY(0); }
+    .modal-hdr { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-2); position: sticky; top: 0; background: var(--white); z-index: 1; }
+    .modal-title { font-size: 15px; font-weight: 600; color: var(--text); }
+    .modal-close { width: 30px; height: 30px; border-radius: 7px; border: 1px solid var(--border); background: var(--white); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s; }
+    .modal-close:hover { background: var(--bg); }
+    .modal-close svg { width: 14px; height: 14px; stroke: var(--text-2); fill: none; stroke-width: 2; stroke-linecap: round; }
+    .modal-body { padding: 1.5rem; }
+
+    /* Slip gaji layout */
+    .slip-header {
+      background: linear-gradient(135deg, var(--navy) 0%, #1a3a6b 100%);
+      border-radius: 10px; padding: 1.25rem 1.5rem; margin-bottom: 1.25rem; color: white;
+    }
+    .slip-nama    { font-size: 16px; font-weight: 600; margin-bottom: 2px; }
+    .slip-periode { font-size: 12px; color: rgba(255,255,255,0.5); }
+    .slip-nominal { font-size: 28px; font-weight: 600; font-family: 'DM Mono', monospace; margin-top: 10px; }
+    .slip-nominal-label { font-size: 10.5px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: .05em; margin-top: 4px; }
+
+    .slip-section-title { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; margin-top: 1.25rem; }
+
+    .slip-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border-2); font-size: 13px; }
+    .slip-row:last-child { border-bottom: none; }
+    .slip-row-label { color: var(--text-2); }
+    .slip-row-val   { font-weight: 500; font-family: 'DM Mono', monospace; font-size: 12.5px; }
+    .slip-row-val.green { color: var(--green); }
+    .slip-row-val.red   { color: var(--red); }
+    .slip-row-val.bold  { font-weight: 600; font-size: 14px; }
+
+    .slip-total-box { background: var(--green-lt); border: 1px solid var(--green-bdr); border-radius: 8px; padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; }
+    .slip-total-label { font-size: 13px; font-weight: 500; color: var(--green); }
+    .slip-total-val   { font-size: 20px; font-weight: 600; color: var(--green); font-family: 'DM Mono', monospace; }
+
+    /* WO detail table */
+    .wo-tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-top: 8px; }
+    .wo-tbl th { background: var(--bg); padding: 8px 12px; text-align: left; font-size: 11px; font-weight: 600; color: var(--text-3); border-bottom: 1px solid var(--border); }
+    .wo-tbl td { padding: 9px 12px; border-bottom: 1px solid var(--border-2); color: var(--text); }
+    .wo-tbl tr:last-child td { border-bottom: none; }
+
+    /* Screenshot bukti */
+    .ss-btn {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--blue-lt); border: 1px solid #bfdbfe;
+      border-radius: 8px; padding: .875rem 1rem;
+      font-size: 13px; font-weight: 500; color: var(--blue);
+      cursor: pointer; text-decoration: none; margin-top: 1rem;
+      transition: background .15s;
+    }
+    .ss-btn:hover { background: #dbeafe; }
+    .ss-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* ── Screenshot preview modal ── */
+    .ss-overlay {
+      position: fixed; inset: 0; background: rgba(15,31,56,0.8);
+      backdrop-filter: blur(6px); z-index: 300;
+      display: flex; align-items: center; justify-content: center;
+      padding: 1.5rem; opacity: 0; pointer-events: none; transition: opacity .2s;
+    }
+    .ss-overlay.show { opacity: 1; pointer-events: all; }
+    .ss-box { background: var(--white); border-radius: 14px; overflow: hidden; max-width: 680px; width: 100%; transform: scale(.95); transition: transform .2s cubic-bezier(.16,1,.3,1); }
+    .ss-overlay.show .ss-box { transform: scale(1); }
+    .ss-hdr { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-2); }
+    .ss-hdr-title { font-size: 13.5px; font-weight: 600; color: var(--text); }
+    .ss-close { width: 30px; height: 30px; border-radius: 7px; border: 1px solid var(--border); background: var(--white); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .ss-close svg { width: 14px; height: 14px; stroke: var(--text-2); fill: none; stroke-width: 2; stroke-linecap: round; }
+    .ss-img-wrap { padding: 1.25rem; background: var(--bg); text-align: center; max-height: 70vh; overflow-y: auto; }
+    .ss-img-wrap img { max-width: 100%; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+    .ss-no-img { font-size: 13px; color: var(--text-3); padding: 2rem; }
+
+    /* toast */
+    .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--navy); color: white; padding: 10px 16px; border-radius: 9px; font-size: 13px; display: none; z-index: 999; max-width: 320px; }
+
+    @keyframes spin   { to { transform: rotate(360deg); } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+
+<!-- ═══════ SIDEBAR ═══════ -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
+    </div>
+    <div class="logo-text"><h2>Rekap Gaji</h2><p>Teknisi</p></div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Menu</div>
+    <a class="nav-item" href="dashboard.html">
+      <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </a>
+    <a class="nav-item active" href="riwayat-gaji.html">
+      <svg class="nav-icon" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Riwayat Gaji
+    </a>
+  </div>
+  <div class="user-box">
+    <div class="avatar" id="user-avatar">?</div>
+    <div>
+      <div class="user-name" id="user-nama">-</div>
+      <div class="user-role">Teknisi</div>
+      <button class="btn-logout" onclick="logout()">Keluar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ MAIN ═══════ -->
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-title">Riwayat Gaji</span>
+  </div>
+
+  <div class="content">
+
+    <!-- Ringkasan tahun -->
+    <div class="ringkasan">
+      <div class="rs">
+        <div class="rs-label">Total Gaji Bersih</div>
+        <div class="rs-val green" id="rs-bersih">—</div>
+      </div>
+      <div class="rs">
+        <div class="rs-label">Total Potongan</div>
+        <div class="rs-val red" id="rs-potongan">—</div>
+      </div>
+      <div class="rs">
+        <div class="rs-label">Bulan Terbayar</div>
+        <div class="rs-val blue" id="rs-bulan">—</div>
+      </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="filter-bar">
+      <label>Tahun</label>
+      <select id="f-tahun" onchange="loadRiwayat()"></select>
+      <button class="btn btn-primary" onclick="loadRiwayat(new Date().getFullYear())">
+        <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.49"/></svg>
+        Muat Ulang
+      </button>
+    </div>
+
+    <!-- Daftar riwayat -->
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">Daftar Gaji</span>
+        <span class="card-count" id="jumlah-riwayat">—</span>
+      </div>
+      <div id="riwayat-list">
+        <div class="spinner-wrap"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════ MODAL SLIP GAJI ═══════ -->
+<div class="modal-overlay" id="modal-overlay" onclick="tutupModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-hdr">
+      <span class="modal-title" id="modal-title">Slip Gaji</span>
+      <button class="modal-close" onclick="tutupModal()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="modal-body">
+      <div class="spinner-wrap"><div class="spinner"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ MODAL SCREENSHOT ═══════ -->
+<div class="ss-overlay" id="ss-overlay" onclick="tutupSS(event)">
+  <div class="ss-box">
+    <div class="ss-hdr">
+      <span class="ss-hdr-title">Bukti Transfer</span>
+      <button class="ss-close" onclick="tutupSS()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="ss-img-wrap" id="ss-img-wrap"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/shared/auth.js"></script>
+<script>
+  if (!requireAuth("teknisi")) throw new Error("Unauthorized");
+  initUserInfo();
+
+  // ── Init filter tahun ─────────────────────────────────────────────────
+  (function initFilter() {
+    const sel = document.getElementById("f-tahun");
+    const thn = new Date().getFullYear();
+    for (let y = thn; y >= thn - 10; y--) {
+      const o = document.createElement("option");
+      o.value = y; o.textContent = y; sel.appendChild(o);
+    }
+  })();
+
+  // ── Load riwayat ──────────────────────────────────────────────────────
+  // async function loadRiwayat() {
+  //   const tahun = document.getElementById("f-tahun").value;
+
+  //   // Spinner
+  //   document.getElementById("riwayat-list").innerHTML =
+  //     '<div class="spinner-wrap"><div class="spinner"></div></div>';
+  //   document.getElementById("jumlah-riwayat").textContent = "—";
+
+  //   const data = await apiFetch(`/teknisi/riwayat-gaji?tahun=${tahun}`);
+
+  //   if (!data?.success) {
+  //     renderListError("Gagal memuat data riwayat gaji.");
+  //     return;
+  //   }
+
+  //   const { riwayat, ringkasan } = data.data;
+
+  //   // Update ringkasan
+  //   document.getElementById("rs-bersih").textContent   = rupiah(ringkasan?.total_gaji_bersih ?? 0);
+  //   document.getElementById("rs-potongan").textContent = rupiah(ringkasan?.total_potongan ?? 0);
+  //   document.getElementById("rs-bulan").textContent    = `${ringkasan?.bulan_terbayar ?? 0} bulan`;
+  //   document.getElementById("jumlah-riwayat").textContent = `${riwayat.length} periode`;
+
+  //   renderList(riwayat);
+  // }
+  async function loadRiwayat(forceTahun = null) {
+    let tahun = forceTahun || document.getElementById("f-tahun").value;
+
+    if (!tahun) {
+      tahun = new Date().getFullYear();
+    }
+
+    // 🔥 sinkronkan ke UI
+    document.getElementById("f-tahun").value = tahun;
+
+    console.log("Load riwayat tahun:", tahun);
+
+    // Spinner
+    document.getElementById("riwayat-list").innerHTML =
+      '<div class="spinner-wrap"><div class="spinner"></div></div>';
+    document.getElementById("jumlah-riwayat").textContent = "—";
+
+    const data = await apiFetch(`/teknisi/riwayat-gaji?tahun=${tahun}`);
+
+    if (!data?.success) {
+      renderListError("Gagal memuat data riwayat gaji.");
+      return;
+    }
+
+    const { riwayat, ringkasan } = data.data;
+
+    document.getElementById("rs-bersih").textContent   = rupiah(ringkasan?.total_gaji_bersih ?? 0);
+    document.getElementById("rs-potongan").textContent = rupiah(ringkasan?.total_potongan ?? 0);
+    document.getElementById("rs-bulan").textContent    = `${ringkasan?.bulan_terbayar ?? 0} bulan`;
+    document.getElementById("jumlah-riwayat").textContent = `${riwayat.length} periode`;
+
+    renderList(riwayat);
+  }
+
+  // ── Render list riwayat ───────────────────────────────────────────────
+  function renderList(rows) {
+    const cont = document.getElementById("riwayat-list");
+
+    if (rows.length === 0) {
+      cont.innerHTML = `
+        <div class="state-box">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          <div class="state-title">Belum ada data gaji</div>
+          <div class="state-sub">Tidak ada riwayat gaji untuk tahun yang dipilih.</div>
+        </div>`;
+      return;
+    }
+
+    const STATUS_LABEL = {
+      dibayar: "Dibayar", diproses: "Diproses",
+      terkirim: "Terkirim", draft: "Draft",
+    };
+
+    const BULAN_SINGKAT = ["","Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+
+    cont.innerHTML = `<div class="riwayat-list">${rows.map(r => `
+      <div class="rw-item" onclick="bukaSlip(${r.rekap_gaji_id})">
+        <div class="rw-left">
+          <div class="rw-bulan-badge">
+            <span class="bln">${BULAN_SINGKAT[r.bulan]}</span>
+            <span class="thn">${r.tahun}</span>
+          </div>
+          <div class="rw-info">
+            <div class="rw-title">${escHtml(r.nama_provider)} · ${escHtml(r.sub_project)}</div>
+            <div class="rw-detail">${escHtml(r.nama_project)}${r.tgl_transfer ? ` · Transfer: ${tglFormat(r.tgl_transfer)}` : ""}</div>
+          </div>
+        </div>
+        <div class="rw-right">
+          <div class="rw-nominal ${r.status === "dibayar" ? "green" : "muted"}">${rupiah(r.gaji_bersih)}</div>
+          <div class="rw-status">
+            <span class="badge b-${r.status || "draft"}">${STATUS_LABEL[r.status] || r.status || "Draft"}</span>
+          </div>
+        </div>
+        <div class="rw-chevron"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </div>`).join("")}</div>`;
+  }
+
+  function renderListError(msg) {
+    document.getElementById("riwayat-list").innerHTML = `
+      <div class="state-box">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div class="state-title">Gagal memuat</div>
+        <div class="state-sub">${escHtml(msg)}</div>
+        <button class="btn" onclick="loadRiwayat()" style="margin-top:8px">Coba Lagi</button>
+      </div>`;
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // MODAL SLIP GAJI
+  // ═══════════════════════════════════════════════════════════
+  async function bukaSlip(rekapGajiId) {
+    const overlay = document.getElementById("modal-overlay");
+    const body    = document.getElementById("modal-body");
+
+    body.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
+    document.getElementById("modal-title").textContent = "Slip Gaji";
+    overlay.classList.add("show");
+    document.body.style.overflow = "hidden";
+
+    // Cari data dari riwayat yang sudah dimuat (tidak perlu fetch ulang)
+    // Fetch slip detail via endpoint slip-gaji dengan filter bulan+tahun
+    // Kita gunakan rekap_gaji_id untuk match
+    const tahun = document.getElementById("f-tahun").value;
+    const data  = await apiFetch(`/teknisi/slip-gaji?tahun=${tahun}`);
+
+    if (!data?.success) {
+      body.innerHTML = `<div class="state-box"><div class="state-title">Gagal memuat slip gaji</div></div>`;
+      return;
+    }
+
+    // Cari rekap yang sesuai dengan id
+    const slip = data.data.find(s => s.rekap_gaji_id === rekapGajiId);
+    if (!slip) {
+      body.innerHTML = `<div class="state-box"><div class="state-title">Data tidak ditemukan</div></div>`;
+      return;
+    }
+
+    document.getElementById("modal-title").textContent =
+      `Slip Gaji — ${BULAN[slip.bulan]} ${slip.tahun}`;
+
+    renderSlip(slip);
+  }
+
+  function renderSlip(slip) {
+    const body = document.getElementById("modal-body");
+    const STATUS_LABEL = { dibayar: "Sudah Dibayar", diproses: "Sedang Diproses", terkirim: "Terkirim", draft: "Draft" };
+
+    // Detail WO
+    let woHtml = "";
+    if (slip.detail_wo && slip.detail_wo.length > 0) {
+      if (slip.tipe_pembayaran === "gaji_tetap") {
+        woHtml = `
+          <div class="slip-section-title">Rincian Pembayaran</div>
+          <div class="slip-row">
+            <span class="slip-row-label">Tipe</span>
+            <span class="slip-row-val">Gaji Tetap</span>
+          </div>
+          <div class="slip-row">
+            <span class="slip-row-label">Nominal</span>
+            <span class="slip-row-val green">${rupiah(slip.detail_wo[0].gaji_tetap)}</span>
+          </div>`;
+      } else {
+        woHtml = `
+          <div class="slip-section-title">Rincian WO</div>
+          <table class="wo-tbl">
+            <thead><tr>
+              <th>Jumlah WO</th><th>Jml Teknisi</th>
+              <th>Upah/WO</th><th>Subtotal</th>
+            </tr></thead>
+            <tbody>${slip.detail_wo.map(d => {
+              const upahPerWo = d.jumlah_teknisi > 0 ? (slip.upah_per_wo / d.jumlah_teknisi) : 0;
+              return `<tr>
+                <td>${d.jumlah_wo}</td>
+                <td>${d.jumlah_teknisi}</td>
+                <td style="font-family:'DM Mono',monospace">${rupiah(upahPerWo)}</td>
+                <td style="font-family:'DM Mono',monospace;font-weight:500">${rupiah(d.upah_dihitung)}</td>
+              </tr>`;
+            }).join("")}</tbody>
+          </table>`;
+      }
+    }
+
+    // Potongan
+    let potHtml = "";
+    if (slip.detail_potongan && slip.detail_potongan.length > 0) {
+      potHtml = `
+        <div class="slip-section-title">Rincian Potongan</div>
+        ${slip.detail_potongan.map(p => `
+          <div class="slip-row">
+            <span class="slip-row-label">${escHtml(p.nama_jenis_potongan)}</span>
+            <span class="slip-row-val red">− ${rupiah(p.nominal)}</span>
+          </div>
+          ${p.keterangan ? `<div style="font-size:11px;color:var(--text-3);padding:2px 0 6px">${escHtml(p.keterangan)}</div>` : ""}
+        `).join("")}`;
+    }
+
+    // Screenshot
+    const ssHtml = slip.screenshot_path
+      ? `<a class="ss-btn" onclick="bukaScreenshot('${escHtml(slip.screenshot_path)}')">
+           <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+           Lihat Bukti Transfer
+         </a>`
+      : `<div style="font-size:12px;color:var(--text-3);margin-top:1rem;padding:10px;background:var(--bg);border-radius:8px;text-align:center">Bukti transfer belum tersedia</div>`;
+
+    body.innerHTML = `
+      <!-- Header slip -->
+      <div class="slip-header">
+        <div class="slip-nama">${escHtml(getNama())}</div>
+        <div class="slip-periode">${escHtml(slip.nama_provider)} · ${escHtml(slip.sub_project)} · ${escHtml(slip.nama_cabang)}</div>
+        <div class="slip-nominal">${rupiah(slip.gaji_bersih)}</div>
+        <div class="slip-nominal-label">Gaji Bersih ${BULAN[slip.bulan]} ${slip.tahun}</div>
+      </div>
+
+      <!-- Info gaji -->
+      <div class="slip-section-title">Ringkasan Gaji</div>
+      <div class="slip-row">
+        <span class="slip-row-label">Total Upah WO</span>
+        <span class="slip-row-val">${rupiah(slip.total_gaji)}</span>
+      </div>
+      <div class="slip-row">
+        <span class="slip-row-label">Total Potongan</span>
+        <span class="slip-row-val red">− ${rupiah(slip.total_potongan)}</span>
+      </div>
+      ${slip.tgl_transfer ? `
+      <div class="slip-row">
+        <span class="slip-row-label">Tanggal Transfer</span>
+        <span class="slip-row-val">${tglFormat(slip.tgl_transfer)}</span>
+      </div>` : ""}
+      <div class="slip-row">
+        <span class="slip-row-label">Status</span>
+        <span class="slip-row-val">${STATUS_LABEL[slip.status] || slip.status}</span>
+      </div>
+
+      <!-- Total bersih -->
+      <div class="slip-total-box">
+        <span class="slip-total-label">Gaji Bersih Diterima</span>
+        <span class="slip-total-val">${rupiah(slip.gaji_bersih)}</span>
+      </div>
+
+      ${woHtml}
+      ${potHtml}
+      ${ssHtml}`;
+  }
+
+  function tutupModal(e) {
+    if (e && e.target !== document.getElementById("modal-overlay")) return;
+    document.getElementById("modal-overlay").classList.remove("show");
+    document.body.style.overflow = "";
+  }
+
+  // ── Screenshot modal ──────────────────────────────────────────────────
+  function bukaScreenshot(path) {
+    const wrap = document.getElementById("ss-img-wrap");
+    wrap.innerHTML = path
+      ? `<img src="${escHtml(path)}" alt="Bukti transfer" onerror="this.outerHTML='<div class=ss-no-img>Gambar tidak dapat dimuat.</div>'">`
+      : `<div class="ss-no-img">Bukti transfer tidak tersedia.</div>`;
+    document.getElementById("ss-overlay").classList.add("show");
+  }
+
+  function tutupSS(e) {
+    if (e && e.target !== document.getElementById("ss-overlay")) return;
+    document.getElementById("ss-overlay").classList.remove("show");
+  }
+
+  // ── ESC ───────────────────────────────────────────────────────────────
+  document.addEventListener("keydown", e => {
+    if (e.key !== "Escape") return;
+    if (document.getElementById("ss-overlay").classList.contains("show")) {
+      tutupSS({ target: document.getElementById("ss-overlay") });
+    } else if (document.getElementById("modal-overlay").classList.contains("show")) {
+      tutupModal({ target: document.getElementById("modal-overlay") });
+    }
+  });
+
+  // ── Escape HTML ───────────────────────────────────────────────────────
+  function escHtml(str) {
+    return String(str ?? "")
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────
+  loadRiwayat();
+</script>
+</body>
+</html>

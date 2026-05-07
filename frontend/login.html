@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — Rekap Gaji</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      border: 1px solid #e2e8f0;
+    }
+    .logo {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .logo-icon {
+      width: 48px;
+      height: 48px;
+      background: #185FA5;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px;
+      font-size: 22px;
+    }
+    .logo h1 { font-size: 20px; font-weight: 600; color: #1a2e4a; }
+    .logo p  { font-size: 13px; color: #64748b; margin-top: 4px; }
+
+    .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 1rem; }
+    label { font-size: 13px; font-weight: 500; color: #374151; }
+    input {
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #1e293b;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px #dbeafe; }
+
+    .btn-login {
+      width: 100%;
+      padding: 11px;
+      background: #185FA5;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      transition: background 0.15s;
+    }
+    .btn-login:hover    { background: #0C447C; }
+    .btn-login:disabled { background: #93c5fd; cursor: not-allowed; }
+
+    .error {
+      background: #fef2f2;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 13px;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <div class="logo-icon">📋</div>
+      <h1>Rekap Gaji</h1>
+      <p>Sistem Rekap Gaji Teknisi</p>
+    </div>
+
+    <div class="error" id="error-msg"></div>
+
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input type="email" id="email" placeholder="email@contoh.com" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="Masukkan password" autocomplete="current-password">
+    </div>
+
+    <button class="btn-login" id="btn-login" onclick="login()">Masuk</button>
+  </div>
+
+  <script>
+    // Cek jika sudah login sebelumnya
+    const _token = localStorage.getItem("token");
+    const _role  = localStorage.getItem("role");
+    if (_token && _role) {
+      redirectByRole(_role);
+    }
+
+    function redirectByRole(role) {
+      if (role === "admin_cabang") {
+        window.location.href = "/admin-cabang/dashboard.html";
+      } else if (role === "admin_pusat") {
+        window.location.href = "/admin-pusat/dashboard.html";
+      } else if (role === "teknisi") {
+        window.location.href = "/teknisi/dashboard.html";
+      }
+    }
+
+    function showError(msg) {
+      const el = document.getElementById("error-msg");
+      el.textContent = msg;
+      el.style.display = msg ? "block" : "none";
+    }
+
+    async function login() {
+      const email    = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const btn      = document.getElementById("btn-login");
+
+      showError("");
+
+      if (!email || !password) {
+        showError("Email dan password wajib diisi");
+        return;
+      }
+
+      // Loading state
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Memproses...';
+
+      try {
+        const res  = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await res.json();
+
+        if (!data.success) {
+          showError(data.message || "Login gagal");
+          return;
+        }
+
+        // Simpan data user ke localStorage
+        localStorage.setItem("token",     data.data.token);
+        localStorage.setItem("role",      data.data.user.role);
+        localStorage.setItem("nama",      data.data.user.nama);
+        localStorage.setItem("id",        data.data.user.id);
+        localStorage.setItem("cabang_id", data.data.user.cabang_id ?? "");
+
+        // Redirect sesuai role
+        redirectByRole(data.data.user.role);
+
+      } catch (err) {
+        console.error(err);
+        showError("Gagal terhubung ke server. Pastikan server berjalan.");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = "Masuk";
+      }
+    }
+
+    // Tekan Enter untuk login
+    document.getElementById("password").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") login();
+    });
+    document.getElementById("email").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") document.getElementById("password").focus();
+    });
+  </script>
+</body>
+</html>

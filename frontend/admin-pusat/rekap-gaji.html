@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rekap Gaji — Admin Pusat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f4f6fa; --white: #ffffff; --navy: #0f1f38;
+      --blue: #185FA5; --blue-lt: #eff6ff; --blue-acc: #3b9eff;
+      --text: #1e293b; --text-2: #64748b; --text-3: #94a3b8;
+      --border: #e2e8f0; --border-2: #f1f5f9;
+      --green: #16a34a; --green-lt: #f0fdf4; --green-bdr: #bbf7d0;
+      --amber: #b45309; --amber-lt: #fffbeb; --amber-bdr: #fde68a;
+      --red: #dc2626; --red-lt: #fef2f2; --red-bdr: #fecaca;
+      --sidebar-w: 232px; --topbar-h: 56px; --radius: 10px;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+
+    /* ═══ SIDEBAR ═══ */
+    .sidebar { width: var(--sidebar-w); background: var(--navy); display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 50; }
+    .sidebar-logo { padding: 1.375rem 1.375rem 1.125rem; border-bottom: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; gap: 10px; }
+    .logo-icon { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, var(--blue), var(--blue-acc)); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .logo-icon svg { width: 17px; height: 17px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .logo-text h2 { font-size: 13.5px; font-weight: 600; color: #fff; }
+    .logo-text p { font-size: 10.5px; color: rgba(255,255,255,0.4); margin-top: 1px; }
+    .nav-section { padding: 1.125rem 0 .375rem; flex: 1; overflow-y: auto; }
+    .nav-label { font-size: 9.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,0.25); padding: 0 1.375rem; margin-bottom: .375rem; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 1.375rem; font-size: 13px; color: rgba(255,255,255,0.5); text-decoration: none; border-left: 2px solid transparent; transition: background .15s, color .15s; }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.85); }
+    .nav-item.active { color: #fff; background: rgba(59,158,255,0.12); border-left-color: var(--blue-acc); font-weight: 500; }
+    .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; opacity: .7; }
+    .nav-item.active svg { opacity: 1; }
+    .nav-badge { margin-left: auto; background: var(--red); color: white; font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 99px; display: none; }
+    .nav-badge.show { display: inline-block; }
+    .user-box { padding: 1rem 1.375rem; border-top: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; gap: 10px; }
+    .avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--blue), var(--blue-acc)); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: white; flex-shrink: 0; }
+    .user-name { font-size: 13px; font-weight: 500; color: #fff; }
+    .user-role { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 1px; }
+    .btn-logout { margin-top: 4px; font-size: 11px; color: rgba(255,100,100,0.7); cursor: pointer; background: none; border: none; padding: 0; font-family: 'DM Sans', sans-serif; transition: color .15s; }
+    .btn-logout:hover { color: #f87171; }
+
+    /* ═══ MAIN ═══ */
+    .main { flex: 1; margin-left: var(--sidebar-w); display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar { background: var(--white); border-bottom: 1px solid var(--border); height: var(--topbar-h); padding: 0 1.75rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; }
+    .topbar-title { font-size: 15px; font-weight: 600; color: var(--text); }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+    .content { padding: 1.75rem; flex: 1; }
+
+    /* ═══ FILTER BAR ═══ */
+    .filter-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 1.25rem; flex-wrap: wrap; }
+    .filter-bar select, .filter-bar input {
+      font-family: 'DM Sans', sans-serif; font-size: 13px; padding: 7px 11px;
+      border: 1px solid var(--border); border-radius: 8px; background: var(--white);
+      color: var(--text); outline: none; transition: border-color .15s;
+    }
+    .filter-bar select:focus, .filter-bar input:focus { border-color: var(--blue-acc); }
+    .filter-bar select { cursor: pointer; }
+    .filter-spacer { flex: 1; }
+
+    /* ═══ BUTTONS ═══ */
+    .btn { font-family: 'DM Sans', sans-serif; font-size: 12.5px; font-weight: 500; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--white); color: var(--text-2); cursor: pointer; transition: background .15s, color .15s; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+    .btn:hover { background: var(--bg); color: var(--text); }
+    .btn-primary { background: var(--blue); color: white; border-color: var(--blue); }
+    .btn-primary:hover { background: #1248a0; color: white; }
+    .btn-green { background: var(--green); color: white; border-color: var(--green); }
+    .btn-green:hover { background: #15803d; color: white; }
+    .btn-sm { font-size: 11.5px; padding: 5px 10px; border-radius: 6px; }
+    .btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* ═══ TABLE ═══ */
+    .card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; padding: 10px 14px; font-size: 10.5px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid var(--border-2); background: var(--bg); white-space: nowrap; }
+    td { padding: 11px 14px; border-bottom: 1px solid var(--border-2); color: var(--text-2); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafbfd; }
+    .mono { font-family: 'DM Mono', monospace; font-size: 12.5px; }
+
+    /* ═══ BADGES ═══ */
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+    .b-dibayar  { background: var(--green-lt); color: var(--green); border: 1px solid var(--green-bdr); }
+    .b-pending  { background: var(--amber-lt); color: var(--amber); border: 1px solid var(--amber-bdr); }
+
+    /* ═══ STATE ═══ */
+    .state-box { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 1rem; gap: 10px; text-align: center; }
+    .state-box svg { width: 40px; height: 40px; stroke: var(--text-3); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .state-title { font-size: 14px; font-weight: 600; color: var(--text-2); }
+    .state-sub   { font-size: 13px; color: var(--text-3); max-width: 340px; line-height: 1.6; }
+    .spinner-wrap { display: flex; align-items: center; justify-content: center; padding: 3.5rem; }
+    .spinner { width: 26px; height: 26px; border: 2.5px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin .7s linear infinite; }
+
+    /* ═══ MODAL OVERLAY ═══ */
+    .overlay { position: fixed; inset: 0; background: rgba(15,31,56,0.55); backdrop-filter: blur(4px); z-index: 200; display: flex; align-items: flex-start; justify-content: center; padding: 2rem 1rem; overflow-y: auto; opacity: 0; pointer-events: none; transition: opacity .2s; }
+    .overlay.show { opacity: 1; pointer-events: all; }
+    .modal { background: var(--white); border-radius: 14px; width: 100%; max-width: 600px; box-shadow: 0 20px 60px rgba(15,31,56,0.2); transform: translateY(12px); transition: transform .25s cubic-bezier(.16,1,.3,1); margin: auto; }
+    .overlay.show .modal { transform: translateY(0); }
+    .modal-hdr { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-2); display: flex; align-items: center; justify-content: space-between; }
+    .modal-title { font-size: 15px; font-weight: 600; color: var(--text); }
+    .modal-sub { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+    .btn-close { width: 30px; height: 30px; border-radius: 7px; border: 1px solid var(--border); background: var(--white); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .btn-close svg { width: 14px; height: 14px; stroke: var(--text-2); fill: none; stroke-width: 2; stroke-linecap: round; }
+    .modal-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; }
+    .modal-ftr { padding: 1rem 1.5rem; border-top: 1px solid var(--border-2); display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+
+    /* ═══ FORM ═══ */
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-label { font-size: 12px; font-weight: 600; color: var(--text-2); }
+    .form-label span { color: var(--red); margin-left: 2px; }
+    .form-control { font-family: 'DM Sans', sans-serif; font-size: 13px; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; color: var(--text); background: var(--white); outline: none; transition: border-color .15s; width: 100%; }
+    .form-control:focus { border-color: var(--blue-acc); }
+    .form-control:disabled { background: var(--bg); color: var(--text-3); cursor: not-allowed; }
+    .form-hint { font-size: 11.5px; color: var(--text-3); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* ═══ SUMMARY BOX ═══ */
+    .summary-box { background: var(--bg); border: 1px solid var(--border-2); border-radius: 10px; padding: 1rem 1.25rem; }
+    .summary-row { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; font-size: 13px; }
+    .summary-row:not(:last-child) { border-bottom: 1px solid var(--border-2); }
+    .summary-row .label { color: var(--text-2); }
+    .summary-row .val { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 600; }
+    .summary-row.total .label { font-weight: 600; color: var(--text); font-size: 13.5px; }
+    .summary-row.total .val { color: var(--green); font-size: 15px; }
+    .summary-row.potongan .val { color: var(--red); }
+
+    /* ═══ POTONGAN LIST ═══ */
+    .potongan-list { display: flex; flex-direction: column; gap: 8px; }
+    .potongan-item { display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 8px; align-items: center; }
+    .potongan-item select, .potongan-item input { font-family: 'DM Sans', sans-serif; font-size: 12.5px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 7px; color: var(--text); background: var(--white); outline: none; transition: border-color .15s; width: 100%; }
+    .potongan-item select:focus, .potongan-item input:focus { border-color: var(--blue-acc); }
+    .btn-hapus-pot { width: 30px; height: 30px; border-radius: 6px; border: 1px solid var(--red-bdr); background: var(--red-lt); color: var(--red); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background .15s; }
+    .btn-hapus-pot:hover { background: #fecaca; }
+    .btn-hapus-pot svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+    .btn-add-pot { align-self: flex-start; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; padding: 6px 12px; border-radius: 7px; border: 1px dashed var(--border); background: none; color: var(--text-3); cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: border-color .15s, color .15s; }
+    .btn-add-pot:hover { border-color: var(--blue-acc); color: var(--blue); }
+    .btn-add-pot svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+
+    /* ═══ UPLOAD ZONE ═══ */
+    .upload-zone {
+      border: 1.5px dashed var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 110px;
+      position: relative;
+    }
+    .upload-zone:hover,
+    .upload-zone.drag-over {
+      border-color: var(--blue-acc);
+      background: var(--blue-lt);
+    }
+    /* FIX: default hidden via CSS, bukan inline style ganda */
+    #upload-actions { display: none; margin-top: 6px; gap: 8px; align-items: center; }
+
+    /* ═══ DETAIL PANEL (slide-in kanan) ═══ */
+    .detail-overlay { position: fixed; inset: 0; z-index: 180; display: flex; pointer-events: none; }
+    .detail-backdrop { flex: 1; background: rgba(15,31,56,0); transition: background .25s; }
+    .detail-overlay.show .detail-backdrop { background: rgba(15,31,56,0.35); pointer-events: all; }
+
+    /* FIX: pointer-events: none saat panel tertutup agar tidak blok klik di bawahnya */
+    .detail-panel {
+      width: 520px; max-width: 92vw; background: var(--white);
+      border-left: 1px solid var(--border); height: 100vh; overflow-y: auto;
+      transform: translateX(100%);
+      transition: transform .3s cubic-bezier(.16,1,.3,1);
+      pointer-events: none;   /* ← FIX UTAMA */
+      display: flex; flex-direction: column;
+    }
+    .detail-overlay.show .detail-panel {
+      transform: translateX(0);
+      pointer-events: all;    /* ← aktif hanya saat terbuka */
+    }
+
+    .detail-hdr { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-2); display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; position: sticky; top: 0; background: var(--white); z-index: 5; }
+    .detail-title { font-size: 14px; font-weight: 600; color: var(--text); }
+    .detail-meta { font-size: 12px; color: var(--text-3); margin-top: 3px; line-height: 1.5; }
+    .detail-body { padding: 1.5rem; flex: 1; display: flex; flex-direction: column; gap: 1.25rem; }
+    .detail-section { }
+    .detail-section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); margin-bottom: 10px; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .detail-cell { background: var(--bg); border-radius: 8px; padding: 10px 12px; }
+    .detail-cell-label { font-size: 10.5px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 3px; }
+    .detail-cell-val { font-size: 13px; font-weight: 600; color: var(--text); }
+    .detail-cell-val.blue  { color: var(--blue); font-family: 'DM Mono', monospace; }
+    .detail-cell-val.red   { color: var(--red);  font-family: 'DM Mono', monospace; }
+    .detail-cell-val.green { color: var(--green); font-family: 'DM Mono', monospace; font-size: 15px; }
+    .detail-ftr { padding: 1rem 1.5rem; border-top: 1px solid var(--border-2); position: sticky; bottom: 0; background: var(--white); display: flex; flex-direction: column; gap: 8px; }
+
+    /* tabel WO di detail */
+    .wo-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    .wo-table th { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--text-3); padding: 6px 10px; border-bottom: 1px solid var(--border-2); text-align: left; background: var(--bg); }
+    .wo-table td { padding: 8px 10px; border-bottom: 1px solid var(--border-2); color: var(--text-2); }
+    .wo-table tr:last-child td { border-bottom: none; }
+
+    /* potongan di detail */
+    .pot-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border-2); font-size: 13px; }
+    .pot-row:last-child { border-bottom: none; }
+    .pot-nama { color: var(--text-2); }
+    .pot-ket  { font-size: 11.5px; color: var(--text-3); margin-top: 1px; }
+    .pot-val  { font-family: 'DM Mono', monospace; font-size: 12.5px; color: var(--red); font-weight: 600; }
+
+    /* screenshot di detail */
+    .ss-thumb { border-radius: 8px; overflow: hidden; border: 1px solid var(--border); cursor: pointer; display: inline-block; max-width: 100%; }
+    .ss-thumb img { display: block; max-width: 100%; max-height: 200px; object-fit: cover; }
+    .ss-no { font-size: 12.5px; color: var(--text-3); padding: 1rem; background: var(--bg); border-radius: 8px; text-align: center; }
+
+    /* modal screenshot besar */
+    .ss-overlay { position: fixed; inset: 0; background: rgba(15,31,56,0.85); backdrop-filter: blur(8px); z-index: 400; display: flex; align-items: center; justify-content: center; padding: 1.5rem; opacity: 0; pointer-events: none; transition: opacity .2s; }
+    .ss-overlay.show { opacity: 1; pointer-events: all; }
+    .ss-modal { background: var(--white); border-radius: 14px; overflow: hidden; max-width: 720px; width: 100%; transform: scale(.95); transition: transform .2s cubic-bezier(.16,1,.3,1); box-shadow: 0 24px 72px rgba(15,31,56,0.3); }
+    .ss-overlay.show .ss-modal { transform: scale(1); }
+    .ss-modal-hdr { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-2); display: flex; align-items: center; justify-content: space-between; }
+    .ss-modal-img { padding: 1.25rem; background: var(--bg); text-align: center; max-height: 75vh; overflow-y: auto; }
+    .ss-modal-img img { max-width: 100%; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; padding: 10px 16px; border-radius: 9px; font-size: 13px; display: none; z-index: 999; max-width: 320px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); color: white; }
+
+    @keyframes spin   { to { transform: rotate(360deg); } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
+    </div>
+    <div class="logo-text"><h2>Rekap Gaji</h2><p>Admin Pusat</p></div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Menu Utama</div>
+    <a class="nav-item" href="/admin-pusat/dashboard.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </a>
+    <a class="nav-item" href="/admin-pusat/laporan-masuk.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Laporan Masuk
+      <span class="nav-badge" id="badge-laporan">0</span>
+    </a>
+    <a class="nav-item" href="/admin-pusat/notifikasi.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      Kirim Notifikasi
+    </a>
+    <a class="nav-item active" href="/admin-pusat/rekap-gaji.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Rekap Gaji
+    </a>
+  </div>
+  <div class="user-box">
+    <div class="avatar" id="user-avatar">?</div>
+    <div>
+      <div class="user-name" id="user-nama">-</div>
+      <div class="user-role">Admin Pusat</div>
+      <button class="btn-logout" onclick="logout()">Keluar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">Rekap Gaji</div>
+    <div class="topbar-right">
+      <button class="btn btn-primary" onclick="bukaModalBuat()">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Buat Rekap Gaji
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- Filter -->
+    <div class="filter-bar">
+      <select id="filter-bulan" onchange="loadRekap()">
+        <option value="">Semua Bulan</option>
+        <option value="1">Januari</option><option value="2">Februari</option>
+        <option value="3">Maret</option><option value="4">April</option>
+        <option value="5">Mei</option><option value="6">Juni</option>
+        <option value="7">Juli</option><option value="8">Agustus</option>
+        <option value="9">September</option><option value="10">Oktober</option>
+        <option value="11">November</option><option value="12">Desember</option>
+      </select>
+      <select id="filter-tahun" onchange="loadRekap()">
+        <option value="">Semua Tahun</option>
+      </select>
+      <select id="filter-cabang" onchange="loadRekap()">
+        <option value="">Semua Cabang</option>
+      </select>
+      <div class="filter-spacer"></div>
+      <span id="rekap-count" style="font-size:12.5px;color:var(--text-3)"></span>
+    </div>
+
+    <!-- Tabel -->
+    <div class="card" id="tabel-wrap">
+      <div class="spinner-wrap"><div class="spinner"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     MODAL: BUAT REKAP GAJI BARU
+══════════════════════════════════════════════════ -->
+<div class="overlay" id="overlay-buat">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div>
+        <div class="modal-title">Buat Rekap Gaji</div>
+        <div class="modal-sub">Pilih laporan yang sudah diproses, lalu isi detail pembayaran</div>
+      </div>
+      <button class="btn-close" onclick="tutupModalBuat()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Pilih laporan -->
+      <div class="form-group">
+        <label class="form-label">Pilih Laporan <span>*</span></label>
+        <select class="form-control" id="select-laporan" onchange="onPilihLaporan()">
+          <option value="">— Memuat laporan... —</option>
+        </select>
+        <div class="form-hint">Hanya laporan berstatus <strong>diproses</strong> yang dapat dibuatkan rekap gaji</div>
+      </div>
+
+      <!-- Ringkasan laporan terpilih -->
+      <div id="ringkasan-laporan" style="display:none">
+        <div class="summary-box" style="gap:6px;display:flex;flex-direction:column;">
+          <div class="summary-row">
+            <span class="label">Teknisi</span>
+            <span class="val" id="rl-teknisi" style="color:var(--text)">-</span>
+          </div>
+          <div class="summary-row">
+            <span class="label">Provider / Project / Sub Project</span>
+            <span class="val" id="rl-project" style="color:var(--text-2);font-size:12px;font-family:inherit">-</span>
+          </div>
+          <div class="summary-row">
+            <span class="label">Cabang</span>
+            <span class="val" id="rl-cabang" style="color:var(--text-2);font-family:inherit;font-size:12.5px">-</span>
+          </div>
+          <div class="summary-row">
+            <span class="label">Periode</span>
+            <span class="val" id="rl-periode" style="color:var(--text-2);font-family:inherit;font-size:12.5px">-</span>
+          </div>
+          <div class="summary-row" style="border-top:1px solid var(--border);margin-top:4px;padding-top:8px">
+            <span class="label" style="font-weight:600">Total Gaji Kotor</span>
+            <span class="val blue" id="rl-total">Rp 0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Potongan -->
+      <div class="form-group">
+        <label class="form-label">Potongan Gaji</label>
+        <div class="potongan-list" id="potongan-list"></div>
+        <button class="btn-add-pot" onclick="tambahPotongan()">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Tambah Potongan
+        </button>
+      </div>
+
+      <!-- Tanggal transfer -->
+      <div class="form-group">
+        <label class="form-label">Tanggal Transfer <span>*</span></label>
+        <input type="date" class="form-control" id="input-tgl-transfer">
+      </div>
+
+      <!-- Upload screenshot -->
+      <div class="form-group">
+        <label class="form-label">Screenshot Bukti Transfer</label>
+
+        <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input-ss').click()">
+          <input
+            type="file"
+            id="file-input-ss"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            style="display:none"
+            onchange="handleFilePilih(this.files[0])"
+          >
+
+          <!-- Idle state -->
+          <div id="upload-idle">
+            <svg viewBox="0 0 24 24" style="width:28px;height:28px;stroke:var(--text-3);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;margin-bottom:6px">
+              <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+              <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+            </svg>
+            <div style="font-size:12.5px;color:var(--text-3)">Klik atau seret gambar ke sini</div>
+            <div style="font-size:11.5px;color:var(--text-3);margin-top:3px">JPG, PNG, WEBP, GIF · maks 5 MB</div>
+          </div>
+
+          <!-- Preview state -->
+          <div id="upload-preview" style="display:none">
+            <img id="preview-img" src="" alt="Preview" style="max-height:140px;max-width:100%;border-radius:7px;box-shadow:0 2px 8px rgba(0,0,0,.1)">
+            <div style="font-size:11.5px;color:var(--text-3);margin-top:6px" id="preview-nama"></div>
+          </div>
+
+          <!-- Progress state -->
+          <div id="upload-progress" style="display:none;width:100%;padding:0 8px">
+            <div style="font-size:12px;color:var(--text-2);margin-bottom:6px" id="upload-progress-label">Mengupload...</div>
+            <div style="background:var(--border);border-radius:99px;height:4px;overflow:hidden">
+              <div id="progress-bar" style="height:100%;background:var(--blue);width:0%;transition:width .2s;border-radius:99px"></div>
+            </div>
+          </div>
+
+          <!-- Error state -->
+          <div id="upload-error" style="display:none">
+            <svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:var(--red);fill:none;stroke-width:1.5;stroke-linecap:round;margin-bottom:5px">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <div style="font-size:12px;color:var(--red)" id="upload-error-msg">Upload gagal</div>
+          </div>
+        </div>
+
+        <!-- FIX: Hapus inline style ganda, gunakan CSS #upload-actions { display:none } -->
+        <div id="upload-actions">
+          <button type="button" class="btn btn-sm" onclick="gantiFile(event)" style="font-size:11px;padding:4px 9px">
+            <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Ganti Gambar
+          </button>
+          <button type="button" class="btn btn-sm" onclick="hapusFile(event)" style="font-size:11px;padding:4px 9px;color:var(--red);border-color:var(--red-bdr);background:var(--red-lt)">
+            <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+            Hapus
+          </button>
+          <span id="upload-status-text" style="font-size:11.5px;color:var(--green)"></span>
+        </div>
+
+        <!-- Hidden input URL hasil upload -->
+        <input type="hidden" id="input-screenshot" value="">
+      </div>
+
+      <!-- Summary kalkulasi -->
+      <div class="summary-box" id="summary-kalkulasi">
+        <div class="summary-row">
+          <span class="label">Total Gaji Kotor</span>
+          <span class="val blue" id="sk-kotor">Rp 0</span>
+        </div>
+        <div class="summary-row potongan">
+          <span class="label">Total Potongan</span>
+          <span class="val" id="sk-potongan">− Rp 0</span>
+        </div>
+        <div class="summary-row total" style="margin-top:4px;padding-top:8px;border-top:1px solid var(--border)">
+          <span class="label">Gaji Bersih Diterima</span>
+          <span class="val" id="sk-bersih">Rp 0</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-ftr">
+      <button class="btn" onclick="tutupModalBuat()">Batal</button>
+      <button class="btn btn-primary" id="btn-simpan-rekap" onclick="simpanRekap()">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        Simpan Rekap Gaji
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     DETAIL PANEL (slide-in kanan)
+══════════════════════════════════════════════════ -->
+<div class="detail-overlay" id="detail-overlay">
+  <div class="detail-backdrop" onclick="tutupDetail()"></div>
+  <div class="detail-panel" id="detail-panel">
+    <div class="detail-hdr">
+      <div>
+        <div class="detail-title" id="dp-title">Detail Rekap Gaji</div>
+        <div class="detail-meta" id="dp-meta">-</div>
+      </div>
+      <button class="btn-close" onclick="tutupDetail()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="detail-body" id="detail-body">
+      <div class="spinner-wrap"><div class="spinner"></div></div>
+    </div>
+    <div class="detail-ftr" id="detail-ftr" style="display:none">
+      <button class="btn btn-green" id="btn-kirim-notif" onclick="kirimNotifikasi()">
+        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Kirim Notifikasi ke Admin Cabang
+      </button>
+      <div style="font-size:11.5px;color:var(--text-3);text-align:center">Admin cabang akan menerima pemberitahuan dan mengkonfirmasi pembayaran</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SCREENSHOT BESAR -->
+<div class="ss-overlay" id="ss-overlay">
+  <div class="ss-modal" id="ss-modal">
+    <div class="ss-modal-hdr">
+      <span style="font-size:13.5px;font-weight:600;color:var(--text)" id="ss-modal-title">Bukti Transfer</span>
+      <button class="btn-close" onclick="tutupSS()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="ss-modal-img" id="ss-modal-img"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- SCRIPTS -->
+<script src="/shared/auth.js"></script>
+<script>
+if (!requireAuth("admin_pusat")) throw new Error("Unauthorized");
+initUserInfo();
+
+// ── State global ─────────────────────────────────────────────────────────
+const BLN = ["","Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+let semuaRekap      = [];
+let jenisPotongan   = [];
+let laporanProses   = [];
+let gajKotorDipilih = 0;
+let rekapDipilihId  = null;
+
+// ── Init ─────────────────────────────────────────────────────────────────
+async function init() {
+  isiFilterTahun();
+  // Load rekap TERLEBIH DAHULU agar bisa filter laporan
+  await loadRekap(); 
+  await Promise.all([
+    loadCabangFilter(),
+    loadJenisPotongan(),
+    loadLaporanProses(),
+  ]);
+}
+
+function isiFilterTahun() {
+  const now = new Date();
+  const sel = document.getElementById("filter-tahun");
+  for (let y = now.getFullYear(); y >= now.getFullYear() - 3; y--) {
+    const o = document.createElement("option");
+    o.value = y; o.textContent = y;
+    if (y === now.getFullYear()) o.selected = true;
+    sel.appendChild(o);
+  }
+}
+
+// ── Load cabang filter ────────────────────────────────────────────────────
+async function loadCabangFilter() {
+  const data = await apiFetch("/admin-pusat/master/cabang");
+  if (!data?.success) return;
+  const sel = document.getElementById("filter-cabang");
+  data.data.forEach(c => {
+    const o = document.createElement("option");
+    o.value = c.id; o.textContent = c.nama_cabang;
+    sel.appendChild(o);
+  });
+}
+
+// ── Load jenis potongan ───────────────────────────────────────────────────
+async function loadJenisPotongan() {
+  const data = await apiFetch("/admin-pusat/master/jenis-potongan");
+  if (data?.success) jenisPotongan = data.data;
+}
+
+// ── Load laporan diproses ─────────────────────────────────────────────────
+async function loadLaporanProses() {
+  const data = await apiFetch("/admin-pusat/laporan-masuk?status=diproses");
+  if (!data?.success) return;
+  laporanProses = data.data;
+  isiSelectLaporan(); // Selalu refresh select setelah load
+}
+
+function isiSelectLaporan() {
+  const sel = document.getElementById("select-laporan");
+  
+  // Filter laporan yang BELUM digunakan untuk rekap gaji
+  const laporanTersedia = laporanProses.filter(laporan => {
+    // Cek apakah laporan ini sudah ada di semuaRekap
+    return !semuaRekap.some(rekap => rekap.laporan_wo_id == laporan.id);
+  });
+
+  if (laporanTersedia.length === 0) {
+    sel.innerHTML = '<option value="">Pilih Laporan</option>';
+    return;
+  }
+
+  sel.innerHTML = '<option value="">— Pilih laporan —</option>';
+  
+  laporanTersedia.forEach(l => {
+    const o = document.createElement("option");
+    o.value = l.id;
+    o.textContent = `${l.nama_teknisi} — ${l.sub_project} (${BLN[l.bulan]} ${l.tahun}) — ${l.nama_cabang}`;
+    o.dataset.totalUpah = l.total_upah;
+    o.dataset.teknisi   = l.nama_teknisi;
+    o.dataset.cabang    = l.nama_cabang;
+    o.dataset.project   = `${l.nama_provider} / ${l.nama_project} / ${l.sub_project}`;
+    o.dataset.bulan     = l.bulan;
+    o.dataset.tahun     = l.tahun;
+    sel.appendChild(o);
+  });
+}
+
+// ── Load & render tabel rekap ─────────────────────────────────────────────
+async function loadRekap() {
+  document.getElementById("tabel-wrap").innerHTML =
+    '<div class="spinner-wrap"><div class="spinner"></div></div>';
+
+  const bulan  = document.getElementById("filter-bulan").value;
+  const tahun  = document.getElementById("filter-tahun").value;
+  const cabang = document.getElementById("filter-cabang").value;
+
+  const qs = [];
+  if (bulan)  qs.push(`bulan=${bulan}`);
+  if (tahun)  qs.push(`tahun=${tahun}`);
+  if (cabang) qs.push(`cabang_id=${cabang}`);
+
+  const data = await apiFetch("/admin-pusat/rekap-gaji" + (qs.length ? "?" + qs.join("&") : ""));
+
+  if (!data)         { renderTabelError("Tidak dapat terhubung ke server."); return; }
+  if (!data.success) { renderTabelError(data.message); return; }
+
+  semuaRekap = data.data || [];
+  document.getElementById("rekap-count").textContent =
+    semuaRekap.length > 0 ? `${semuaRekap.length} rekap ditemukan` : "";
+
+  renderTabel();
+}
+
+function renderTabel() {
+  const wrap = document.getElementById("tabel-wrap");
+
+  if (semuaRekap.length === 0) {
+    wrap.innerHTML = `
+      <div class="state-box">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <div class="state-title">Belum ada rekap gaji</div>
+        <div class="state-sub">Buat rekap gaji dari laporan yang sudah berstatus <strong>diproses</strong></div>
+      </div>`;
+    return;
+  }
+
+  let html = `<table>
+    <thead><tr>
+      <th>Teknisi</th><th>Cabang</th><th>Sub Project</th><th>Periode</th>
+      <th>Total Gaji</th><th>Potongan</th><th>Gaji Bersih</th><th>Status</th><th></th>
+    </tr></thead><tbody>`;
+
+  semuaRekap.forEach(r => {
+    html += `<tr>
+      <td><strong>${escHtml(r.nama_teknisi)}</strong></td>
+      <td style="color:var(--text-3)">${escHtml(r.nama_cabang)}</td>
+      <td>${escHtml(r.sub_project)}</td>
+      <td style="white-space:nowrap">${BLN[r.bulan]} ${r.tahun}</td>
+      <td class="mono" style="color:var(--blue)">${rupiah(r.total_gaji)}</td>
+      <td class="mono" style="color:var(--red)">− ${rupiah(r.total_potongan)}</td>
+      <td class="mono" style="color:var(--green);font-weight:700">${rupiah(r.gaji_bersih)}</td>
+      <td><span class="badge b-${r.status}">${r.status === 'dibayar' ? '✓ Dibayar' : r.status}</span></td>
+      <td>
+        <button class="btn btn-sm" onclick="bukaDetail(${r.id})">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Detail
+        </button>
+      </td>
+    </tr>`;
+  });
+
+  html += "</tbody></table>";
+  wrap.innerHTML = html;
+}
+
+function renderTabelError(msg) {
+  document.getElementById("tabel-wrap").innerHTML = `
+    <div class="state-box">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div class="state-title">Gagal memuat rekap gaji</div>
+      <div class="state-sub">${escHtml(msg)}</div>
+      <button onclick="loadRekap()" class="btn" style="margin-top:8px">Coba Lagi</button>
+    </div>`;
+}
+
+// ── MODAL BUAT REKAP ──────────────────────────────────────────────────────
+function bukaModalBuat() {
+  document.getElementById("select-laporan").value = "";
+  document.getElementById("ringkasan-laporan").style.display = "none";
+  document.getElementById("potongan-list").innerHTML = "";
+  document.getElementById("input-tgl-transfer").value = new Date().toISOString().slice(0, 10);
+  gajKotorDipilih = 0;
+  hitungSummary();
+  hapusFile();   // FIX: reset upload zone dengan benar
+  document.getElementById("overlay-buat").classList.add("show");
+  document.body.style.overflow = "hidden";
+}
+
+function tutupModalBuat() {
+  document.getElementById("overlay-buat").classList.remove("show");
+  document.body.style.overflow = "";
+}
+
+document.getElementById("overlay-buat").addEventListener("click", function(e) {
+  if (e.target === this) tutupModalBuat();
+});
+
+// ── Pilih laporan ─────────────────────────────────────────────────────────
+function onPilihLaporan() {
+  const sel = document.getElementById("select-laporan");
+  const opt = sel.selectedOptions[0];
+  const id  = sel.value;
+
+  if (!id) {
+    document.getElementById("ringkasan-laporan").style.display = "none";
+    gajKotorDipilih = 0;
+    hitungSummary();
+    return;
+  }
+
+  gajKotorDipilih = parseFloat(opt.dataset.totalUpah) || 0;
+  document.getElementById("rl-teknisi").textContent = opt.dataset.teknisi;
+  document.getElementById("rl-project").textContent = opt.dataset.project;
+  document.getElementById("rl-cabang").textContent  = opt.dataset.cabang;
+  document.getElementById("rl-periode").textContent = `${BLN[parseInt(opt.dataset.bulan)]} ${opt.dataset.tahun}`;
+  document.getElementById("rl-total").textContent   = rupiah(gajKotorDipilih);
+  document.getElementById("ringkasan-laporan").style.display = "block";
+  hitungSummary();
+}
+
+// ── Potongan dinamis ──────────────────────────────────────────────────────
+function tambahPotongan() {
+  const list = document.getElementById("potongan-list");
+  const idx  = Date.now();
+
+  const opsiJenis = jenisPotongan.map(j =>
+    `<option value="${j.id}">${escHtml(j.nama)}${j.is_wajib ? " *" : ""}</option>`
+  ).join("");
+
+  const div = document.createElement("div");
+  div.className  = "potongan-item";
+  div.dataset.idx = idx;
+  div.innerHTML  = `
+    <select class="pot-jenis" onchange="hitungSummary()">
+      <option value="">Pilih jenis...</option>${opsiJenis}
+    </select>
+    <input type="text" class="pot-ket" placeholder="Keterangan (opsional)">
+    <input type="number" class="pot-nominal" placeholder="Nominal" min="0" oninput="hitungSummary()" style="font-family:'DM Mono',monospace">
+    <button class="btn-hapus-pot" onclick="hapusPotongan(${idx})">
+      <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+    </button>`;
+  list.appendChild(div);
+}
+
+function hapusPotongan(idx) {
+  const el = document.querySelector(`.potongan-item[data-idx="${idx}"]`);
+  if (el) { el.remove(); hitungSummary(); }
+}
+
+// ── Hitung summary ────────────────────────────────────────────────────────
+function hitungSummary() {
+  let totalPot = 0;
+  document.querySelectorAll(".potongan-item").forEach(item => {
+    const val = parseFloat(item.querySelector(".pot-nominal")?.value || 0);
+    if (!isNaN(val)) totalPot += val;
+  });
+
+  const bersih = gajKotorDipilih - totalPot;
+  document.getElementById("sk-kotor").textContent    = rupiah(gajKotorDipilih);
+  document.getElementById("sk-potongan").textContent = `− ${rupiah(totalPot)}`;
+  document.getElementById("sk-bersih").textContent   = rupiah(bersih < 0 ? 0 : bersih);
+  document.getElementById("sk-bersih").style.color   = bersih < 0 ? "var(--red)" : "var(--green)";
+}
+
+// ── Simpan rekap ──────────────────────────────────────────────────────────
+async function simpanRekap() {
+  const laporan_wo_id   = parseInt(document.getElementById("select-laporan").value);
+  const tgl_transfer    = document.getElementById("input-tgl-transfer").value;
+  const screenshot_path = document.getElementById("input-screenshot").value.trim();
+
+  if (!laporan_wo_id) { showToast("Pilih laporan terlebih dahulu!", false); return; }
+  if (!tgl_transfer)  { showToast("Tanggal transfer wajib diisi!", false); return; }
+
+  const potongan = [];
+  let validPot = true;
+  document.querySelectorAll(".potongan-item").forEach(item => {
+    const jenis_potongan_id = parseInt(item.querySelector(".pot-jenis").value);
+    const keterangan        = item.querySelector(".pot-ket").value.trim();
+    const nominal           = parseFloat(item.querySelector(".pot-nominal").value);
+    if (!jenis_potongan_id || isNaN(nominal) || nominal <= 0) { validPot = false; return; }
+    potongan.push({ jenis_potongan_id, keterangan, nominal });
+  });
+
+  if (!validPot) { showToast("Isi jenis dan nominal semua potongan dengan benar!", false); return; }
+
+  const btn = document.getElementById("btn-simpan-rekap");
+  btn.disabled  = true;
+  btn.innerHTML = `<div class="spinner" style="width:13px;height:13px;border-width:2px;margin-right:4px"></div> Menyimpan...`;
+
+  const data = await apiFetch("/admin-pusat/rekap-gaji", {
+    method: "POST",
+    body: JSON.stringify({ laporan_wo_id, potongan, tgl_transfer, screenshot_path: screenshot_path || null }),
+  });
+
+  btn.disabled  = false;
+  btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polyline points="20 6 9 17 4 12"/></svg> Simpan Rekap Gaji`;
+
+  if (!data?.success) { showToast(data?.message || "Gagal menyimpan rekap gaji.", false); return; }
+
+  showToast("✓ Rekap gaji berhasil disimpan!");
+  tutupModalBuat();
+  await Promise.all([loadRekap(), loadLaporanProses()]);
+  if (data.data?.rekap_gaji_id) bukaDetail(data.data.rekap_gaji_id);
+}
+
+// ── DETAIL PANEL ──────────────────────────────────────────────────────────
+async function bukaDetail(id) {
+  rekapDipilihId = id;
+  document.getElementById("detail-body").innerHTML =
+    '<div class="spinner-wrap"><div class="spinner"></div></div>';
+  document.getElementById("detail-ftr").style.display = "none";
+  document.getElementById("detail-overlay").classList.add("show");
+  document.body.style.overflow = "hidden";
+
+  const data = await apiFetch(`/admin-pusat/rekap-gaji/${id}`);
+
+  if (!data?.success) {
+    document.getElementById("detail-body").innerHTML = `
+      <div class="state-box">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div class="state-title">Gagal memuat detail</div>
+        <div class="state-sub">${escHtml(data?.message || "Server error")}</div>
+      </div>`;
+    return;
+  }
+
+  const { rekap, detail_wo, detail_potongan } = data.data;
+
+  document.getElementById("dp-title").textContent = `Rekap Gaji — ${rekap.nama_teknisi}`;
+  document.getElementById("dp-meta").innerHTML =
+    `${escHtml(rekap.nama_provider)} · ${escHtml(rekap.nama_project)} · ${escHtml(rekap.sub_project)}<br>` +
+    `${BLN[rekap.bulan]} ${rekap.tahun} · ${escHtml(rekap.nama_cabang)}`;
+
+  let html = "";
+
+  // Ringkasan pembayaran
+  html += `
+    <div class="detail-section">
+      <div class="detail-section-title">Ringkasan Pembayaran</div>
+      <div class="detail-grid">
+        <div class="detail-cell" style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div class="detail-cell-label">Gaji Bersih Diterima</div>
+            <div class="detail-cell-val green">${rupiah(rekap.gaji_bersih)}</div>
+          </div>
+          <span class="badge b-${rekap.status}">${rekap.status === 'dibayar' ? '✓ Dibayar' : rekap.status}</span>
+        </div>
+        <div class="detail-cell">
+          <div class="detail-cell-label">Total Gaji Kotor</div>
+          <div class="detail-cell-val blue">${rupiah(rekap.total_gaji)}</div>
+        </div>
+        <div class="detail-cell">
+          <div class="detail-cell-label">Total Potongan</div>
+          <div class="detail-cell-val red">− ${rupiah(rekap.total_potongan)}</div>
+        </div>
+        <div class="detail-cell">
+          <div class="detail-cell-label">Tanggal Transfer</div>
+          <div class="detail-cell-val">${rekap.tgl_transfer ? tglFormat(rekap.tgl_transfer) : '-'}</div>
+        </div>
+        <div class="detail-cell">
+          <div class="detail-cell-label">Tipe Pembayaran</div>
+          <div class="detail-cell-val">${rekap.tipe_pembayaran === 'per_wo' ? 'Per WO' : 'Gaji Tetap'}</div>
+        </div>
+      </div>
+    </div>`;
+
+  // Rincian WO
+  html += `<div class="detail-section"><div class="detail-section-title">Rincian WO</div>`;
+  if (!detail_wo || detail_wo.length === 0) {
+    html += `<div style="font-size:12.5px;color:var(--text-3);padding:8px 0">Tidak ada data WO</div>`;
+  } else {
+    const isPerWo = rekap.tipe_pembayaran === "per_wo";
+    html += `<table class="wo-table"><thead><tr>
+      ${isPerWo ? "<th>Jml WO</th><th>Jml Teknisi</th>" : "<th>Tipe</th>"}
+      <th>Upah Dihitung</th><th>Keterangan</th>
+    </tr></thead><tbody>`;
+    detail_wo.forEach(d => {
+      html += `<tr>
+        ${isPerWo
+          ? `<td><strong>${d.jumlah_wo}</strong> WO</td><td>${d.jumlah_teknisi} orang</td>`
+          : `<td>Gaji Tetap</td>`}
+        <td class="mono" style="color:var(--green);font-weight:600">${rupiah(d.upah_dihitung)}</td>
+        <td style="color:var(--text-3)">${escHtml(d.keterangan || '-')}</td>
+      </tr>`;
+    });
+    html += `</tbody></table>`;
+  }
+  html += `</div>`;
+
+  // Rincian potongan
+  html += `<div class="detail-section"><div class="detail-section-title">Rincian Potongan</div>`;
+  if (!detail_potongan || detail_potongan.length === 0) {
+    html += `<div style="font-size:12.5px;color:var(--text-3);padding:8px 0">Tidak ada potongan</div>`;
+  } else {
+    detail_potongan.forEach(p => {
+      html += `<div class="pot-row">
+        <div>
+          <div class="pot-nama">${escHtml(p.nama_jenis_potongan)}</div>
+          ${p.keterangan ? `<div class="pot-ket">${escHtml(p.keterangan)}</div>` : ""}
+        </div>
+        <div class="pot-val">− ${rupiah(p.nominal)}</div>
+      </div>`;
+    });
+  }
+  html += `</div>`;
+
+  // Bukti transfer
+  html += `<div class="detail-section"><div class="detail-section-title">Bukti Transfer</div>`;
+  if (rekap.screenshot_path) {
+    let src = rekap.screenshot_path;
+    if (!src.startsWith("http") && !src.startsWith("/")) src = "/uploads/" + src;
+    html += `
+      <div class="ss-thumb" onclick="bukaSSBesar('${escHtml(src)}','${escHtml(rekap.nama_teknisi)}')">
+        <img src="${escHtml(src)}" alt="Bukti Transfer"
+             onerror="this.parentElement.outerHTML='<div class=ss-no>Gambar tidak dapat dimuat</div>'">
+      </div>
+      <div style="font-size:11.5px;color:var(--text-3);margin-top:6px">Klik gambar untuk melihat lebih besar</div>`;
+  } else {
+    html += `<div class="ss-no">Belum ada bukti transfer yang dilampirkan</div>`;
+  }
+  html += `</div>`;
+
+  document.getElementById("detail-body").innerHTML = html;
+}
+
+function tutupDetail() {
+  document.getElementById("detail-overlay").classList.remove("show");
+  document.body.style.overflow = "";
+  rekapDipilihId = null;
+}
+
+// ── Modal screenshot besar ────────────────────────────────────────────────
+function bukaSSBesar(src, nama) {
+  document.getElementById("ss-modal-title").textContent = `Bukti Transfer — ${nama}`;
+  document.getElementById("ss-modal-img").innerHTML =
+    `<img src="${escHtml(src)}" alt="Bukti Transfer ${escHtml(nama)}"
+          onerror="this.outerHTML='<div style=padding:2rem;color:var(--text-3);font-size:13px>Gambar tidak dapat dimuat</div>'">`;
+  document.getElementById("ss-overlay").classList.add("show");
+}
+
+function tutupSS() {
+  document.getElementById("ss-overlay").classList.remove("show");
+}
+
+document.getElementById("ss-overlay").addEventListener("click", function(e) {
+  if (!document.getElementById("ss-modal").contains(e.target)) tutupSS();
+});
+
+// ── ESC menutup semua overlay ─────────────────────────────────────────────
+document.addEventListener("keydown", e => {
+  if (e.key !== "Escape") return;
+  tutupSS();
+  if (document.getElementById("overlay-buat").classList.contains("show")) tutupModalBuat();
+  else tutupDetail();
+});
+
+// ══════════════════════════════════════════════════
+// UPLOAD SCREENSHOT
+// ══════════════════════════════════════════════════
+let namaFileUpload = null;
+
+function setUploadState(state) {
+  // state: 'idle' | 'progress' | 'preview' | 'error'
+  document.getElementById("upload-idle").style.display     = state === "idle"     ? "" : "none";
+  document.getElementById("upload-progress").style.display = state === "progress" ? "" : "none";
+  document.getElementById("upload-preview").style.display  = state === "preview"  ? "" : "none";
+  document.getElementById("upload-error").style.display    = state === "error"    ? "" : "none";
+
+  // FIX: gunakan display flex (sesuai CSS #upload-actions)
+  document.getElementById("upload-actions").style.display =
+    ["preview", "error"].includes(state) ? "flex" : "none";
+}
+
+async function handleFilePilih(file) {
+  if (!file) return;
+
+  const MAX_SIZE = 5 * 1024 * 1024;
+  const ALLOWED  = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+  if (!ALLOWED.includes(file.type)) {
+    tampilUploadError("Tipe file tidak diizinkan. Gunakan JPG, PNG, WEBP, atau GIF.");
+    return;
+  }
+  if (file.size > MAX_SIZE) {
+    tampilUploadError("Ukuran file melebihi 5 MB.");
+    return;
+  }
+
+  // Hapus file lama di server jika ada
+  if (namaFileUpload) {
+    fetch(`/api/upload/screenshot/${namaFileUpload}`, { method: "DELETE" }).catch(() => {});
+    namaFileUpload = null;
+  }
+
+  // Preview lokal & mulai progress
+  document.getElementById("preview-img").src = URL.createObjectURL(file);
+  document.getElementById("preview-nama").textContent = file.name;
+  setUploadState("progress");
+  document.getElementById("upload-progress-label").textContent = "Mengupload...";
+  document.getElementById("progress-bar").style.width = "0%";
+
+  let pct  = 0;
+  const tick = setInterval(() => {
+    pct = Math.min(pct + Math.random() * 18, 88);
+    document.getElementById("progress-bar").style.width = pct + "%";
+  }, 120);
+
+  try {
+    const fd = new FormData();
+    fd.append("screenshot", file);
+
+    const res  = await fetch("/api/upload/screenshot", { method: "POST", body: fd });
+    const data = await res.json();
+
+    clearInterval(tick);
+
+    if (!data.success) {
+      tampilUploadError(data.message || "Upload gagal.");
+      return;
+    }
+
+    document.getElementById("progress-bar").style.width = "100%";
+    await new Promise(r => setTimeout(r, 300));
+
+    namaFileUpload = data.filename;
+    document.getElementById("input-screenshot").value       = data.url;
+    document.getElementById("preview-img").src              = data.url;
+    document.getElementById("preview-nama").textContent     = `${data.filename} (${(data.size / 1024).toFixed(1)} KB)`;
+    document.getElementById("upload-status-text").textContent = "✓ Berhasil diupload";
+    setUploadState("preview");
+
+  } catch (err) {
+    clearInterval(tick);
+    tampilUploadError("Koneksi gagal. Periksa jaringan Anda.");
+  }
+}
+
+function tampilUploadError(pesan) {
+  document.getElementById("upload-error-msg").textContent     = pesan;
+  document.getElementById("upload-status-text").textContent   = "";
+  document.getElementById("input-screenshot").value           = "";
+  setUploadState("error");
+}
+
+// FIX: tambah parameter event agar klik tombol tidak bubble ke upload-zone
+function gantiFile(e) {
+  if (e) e.stopPropagation();
+  document.getElementById("file-input-ss").value = "";
+  document.getElementById("file-input-ss").click();
+}
+
+function hapusFile(e) {
+  if (e) e.stopPropagation();
+  if (namaFileUpload) {
+    fetch(`/api/upload/screenshot/${namaFileUpload}`, { method: "DELETE" }).catch(() => {});
+    namaFileUpload = null;
+  }
+  document.getElementById("input-screenshot").value          = "";
+  document.getElementById("preview-img").src                 = "";
+  document.getElementById("file-input-ss").value             = "";
+  document.getElementById("upload-status-text").textContent  = "";
+  setUploadState("idle");
+}
+
+// Drag & Drop
+(function() {
+  const zone = document.getElementById("upload-zone");
+  if (!zone) return;
+  zone.addEventListener("dragover",  e => { e.preventDefault(); zone.classList.add("drag-over"); });
+  zone.addEventListener("dragleave", ()  => zone.classList.remove("drag-over"));
+  zone.addEventListener("drop", e => {
+    e.preventDefault();
+    zone.classList.remove("drag-over");
+    const file = e.dataTransfer.files[0];
+    if (file) handleFilePilih(file);
+  });
+})();
+
+// ── Helper ────────────────────────────────────────────────────────────────
+function escHtml(str) {
+  return String(str ?? "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+// ── Start ─────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

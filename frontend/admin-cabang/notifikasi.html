@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifikasi — Admin Cabang</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #f4f6fa;
+      --white:     #ffffff;
+      --navy:      #0f1f38;
+      --blue:      #185FA5;
+      --blue-lt:   #eff6ff;
+      --blue-acc:  #3b9eff;
+      --text:      #1e293b;
+      --text-2:    #64748b;
+      --text-3:    #94a3b8;
+      --border:    #e2e8f0;
+      --border-2:  #f1f5f9;
+      --green:     #16a34a;
+      --green-lt:  #f0fdf4;
+      --green-bdr: #bbf7d0;
+      --amber:     #b45309;
+      --amber-lt:  #fffbeb;
+      --amber-bdr: #fde68a;
+      --red:       #dc2626;
+      --red-lt:    #fef2f2;
+      --red-bdr:   #fecaca;
+      --sidebar-w: 232px;
+      --topbar-h:  56px;
+      --radius:    10px;
+    }
+
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+
+    /* ═══════ SIDEBAR ═══════ */
+    .sidebar { width: var(--sidebar-w); background: var(--navy); display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 50; }
+    .sidebar-logo { padding: 1.375rem 1.375rem 1.125rem; border-bottom: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; gap: 10px; }
+    .logo-icon { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, var(--blue), var(--blue-acc)); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .logo-icon svg { width: 17px; height: 17px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .logo-text h2 { font-size: 13.5px; font-weight: 600; color: #fff; }
+    .logo-text p  { font-size: 10.5px; color: rgba(255,255,255,0.4); margin-top: 1px; }
+    .nav-section  { padding: 1.125rem 0 .375rem; }
+    .nav-label { font-size: 9.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,0.25); padding: 0 1.375rem; margin-bottom: .375rem; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 1.375rem; font-size: 13px; color: rgba(255,255,255,0.5); text-decoration: none; border-left: 2px solid transparent; transition: background .15s, color .15s; }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.85); }
+    .nav-item.active { color: #fff; background: rgba(59,158,255,0.12); border-left-color: var(--blue-acc); font-weight: 500; }
+    .nav-item .nav-icon { width: 16px; height: 16px; flex-shrink: 0; opacity: .7; }
+    .nav-item.active .nav-icon { opacity: 1; }
+    .nav-badge { margin-left: auto; background: var(--red); color: white; font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 99px; display: none; }
+    .nav-badge.show { display: inline-block; }
+    .user-box { margin-top: auto; padding: 1rem 1.375rem; border-top: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; gap: 10px; }
+    .avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--blue), var(--blue-acc)); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: white; flex-shrink: 0; }
+    .user-name { font-size: 13px; font-weight: 500; color: #fff; }
+    .user-role { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 1px; }
+    .btn-logout { margin-top: 4px; font-size: 11px; color: rgba(255,100,100,0.7); cursor: pointer; background: none; border: none; padding: 0; font-family: 'DM Sans', sans-serif; transition: color .15s; }
+    .btn-logout:hover { color: #f87171; }
+
+    /* ═══════ MAIN ═══════ */
+    .main { flex: 1; margin-left: var(--sidebar-w); display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar { background: var(--white); border-bottom: 1px solid var(--border); height: var(--topbar-h); padding: 0 1.75rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; }
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+    .topbar-title { font-size: 15px; font-weight: 600; color: var(--text); }
+
+    /* ── Tab filter ── */
+    .tab-bar { display: flex; align-items: center; gap: 4px; }
+    .tab {
+      font-family: 'DM Sans', sans-serif; font-size: 12.5px; font-weight: 500;
+      padding: 6px 14px; border-radius: 7px; border: 1px solid transparent;
+      background: none; color: var(--text-2); cursor: pointer;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    .tab:hover { background: var(--bg); color: var(--text); }
+    .tab.active { background: var(--blue-lt); color: var(--blue); border-color: #bfdbfe; font-weight: 600; }
+    .tab-count {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 18px; height: 18px; padding: 0 5px; border-radius: 99px;
+      font-size: 10px; font-weight: 700; margin-left: 5px;
+      background: var(--red); color: white;
+    }
+    .tab.active .tab-count { background: var(--blue); }
+
+    /* ── Tombol refresh ── */
+    .btn-refresh {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500;
+      padding: 6px 12px; border-radius: 7px;
+      border: 1px solid var(--border); background: var(--white); color: var(--text-2);
+      cursor: pointer; transition: background .15s, color .15s;
+    }
+    .btn-refresh:hover { background: var(--bg); color: var(--text); }
+    .btn-refresh svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .btn-refresh.spinning svg { animation: spin .7s linear infinite; }
+
+    /* ═══════ CONTENT ═══════ */
+    .content { padding: 1.75rem; flex: 1; max-width: 880px; }
+
+    /* ── Notif list ── */
+    .notif-list { display: flex; flex-direction: column; gap: 1rem; }
+
+    .notif-card {
+      background: var(--white); border: 1px solid var(--border);
+      border-left: 3px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+      animation: fadeUp .35s ease both;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .notif-card.unread {
+      border-left-color: var(--blue-acc);
+      box-shadow: 0 1px 6px rgba(59,158,255,0.08);
+    }
+    .notif-card.confirmed {
+      border-left-color: var(--green);
+    }
+
+    .notif-hdr {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 1rem 1.25rem;
+    }
+
+    /* dot indikator */
+    .notif-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .dot-unread    { background: var(--blue-acc); box-shadow: 0 0 0 3px rgba(59,158,255,0.15); }
+    .dot-confirmed { background: var(--green); }
+    .dot-read      { background: var(--border); }
+
+    .notif-content { flex: 1; min-width: 0; }
+
+    .notif-title { font-size: 13.5px; font-weight: 500; color: var(--text); line-height: 1.5; margin-bottom: 3px; }
+    .notif-title strong { font-weight: 600; }
+    .notif-meta { font-size: 11.5px; color: var(--text-3); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .notif-meta svg { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+
+    /* badge status */
+    .notif-status {
+      flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 99px;
+    }
+    .ns-menunggu  { background: var(--amber-lt); color: var(--amber); border: 1px solid var(--amber-bdr); }
+    .ns-confirmed { background: var(--green-lt); color: var(--green); border: 1px solid var(--green-bdr); }
+
+    /* ── Rincian gaji ── */
+    .notif-detail {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1px; background: var(--border-2);
+      border-top: 1px solid var(--border-2);
+      border-bottom: 1px solid var(--border-2);
+    }
+    .nd-cell { background: var(--white); padding: .875rem 1.25rem; }
+    .nd-label { font-size: 10.5px; font-weight: 500; color: var(--text-3); letter-spacing: .04em; text-transform: uppercase; margin-bottom: 4px; }
+    .nd-val   { font-size: 14px; font-weight: 600; font-family: 'DM Mono', monospace; }
+    .nd-val.blue  { color: var(--blue); }
+    .nd-val.red   { color: var(--red); }
+    .nd-val.green { color: var(--green); }
+
+    /* ── Footer notif ── */
+    .notif-ftr {
+      padding: .875rem 1.25rem;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap;
+    }
+    .notif-ftr-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    /* link bukti transfer */
+    .ss-link {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 12px; font-weight: 500; color: var(--blue);
+      text-decoration: none; padding: 5px 11px;
+      border: 1px solid #bfdbfe; border-radius: 7px; background: var(--blue-lt);
+      cursor: pointer; transition: background .15s;
+    }
+    .ss-link:hover { background: #dbeafe; }
+    .ss-link svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* tgl transfer */
+    .tgl-transfer { font-size: 12px; color: var(--text-3); display: flex; align-items: center; gap: 5px; }
+    .tgl-transfer svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+
+    /* tombol konfirmasi */
+    .btn-konfirm {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: 'DM Sans', sans-serif; font-size: 12.5px; font-weight: 600;
+      padding: 7px 16px; border-radius: 8px;
+      background: var(--green); color: white; border: none; cursor: pointer;
+      transition: background .15s, opacity .15s;
+    }
+    .btn-konfirm:hover:not(:disabled) { background: #15803d; }
+    .btn-konfirm:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-konfirm svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .btn-konfirm .spin-btn { width: 13px; height: 13px; border: 2px solid rgba(255,255,255,.35); border-top-color: white; border-radius: 50%; animation: spin .6s linear infinite; display: none; }
+    .btn-konfirm.loading .spin-btn { display: block; }
+    .btn-konfirm.loading .konfirm-label { display: none; }
+
+    /* konfirmasi sudah */
+    .konfirm-ok { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: var(--green); }
+    .konfirm-ok svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .tgl-konfirm { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+
+    /* ── Modal Screenshot ── */
+    .ss-overlay {
+      position: fixed; inset: 0; background: rgba(15,31,56,0.8);
+      backdrop-filter: blur(6px); z-index: 300;
+      display: flex; align-items: center; justify-content: center;
+      padding: 1.5rem; opacity: 0; pointer-events: none; transition: opacity .2s;
+    }
+    .ss-overlay.show { opacity: 1; pointer-events: all; }
+    .ss-box {
+      background: var(--white); border-radius: 14px; overflow: hidden;
+      max-width: 680px; width: 100%;
+      transform: scale(.95); transition: transform .2s cubic-bezier(.16,1,.3,1);
+      box-shadow: 0 24px 64px rgba(15,31,56,0.25);
+    }
+    .ss-overlay.show .ss-box { transform: scale(1); }
+    .ss-hdr { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-2); }
+    .ss-hdr-title { font-size: 13.5px; font-weight: 600; color: var(--text); }
+    .ss-close { width: 30px; height: 30px; border-radius: 7px; border: 1px solid var(--border); background: var(--white); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .ss-close svg { width: 14px; height: 14px; stroke: var(--text-2); fill: none; stroke-width: 2; stroke-linecap: round; }
+    .ss-img-wrap { padding: 1.25rem; background: var(--bg); text-align: center; max-height: 70vh; overflow-y: auto; }
+    .ss-img-wrap img { max-width: 100%; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+    .no-ss { font-size: 13px; color: var(--text-3); padding: 2rem; }
+
+    /* ── State: empty / loading / error ── */
+    .state-box { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 1rem; gap: 10px; text-align: center; }
+    .state-box svg { width: 40px; height: 40px; stroke: var(--text-3); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .state-title { font-size: 14px; font-weight: 600; color: var(--text-2); }
+    .state-sub   { font-size: 13px; color: var(--text-3); max-width: 320px; line-height: 1.6; }
+    .btn-coba-lagi {
+      margin-top: 8px; font-family: 'DM Sans', sans-serif; font-size: 12.5px; font-weight: 500;
+      padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--white); cursor: pointer; color: var(--text-2); transition: background .15s;
+    }
+    .btn-coba-lagi:hover { background: var(--bg); }
+    .spinner-wrap { display: flex; align-items: center; justify-content: center; padding: 4rem; }
+    .spinner { width: 28px; height: 28px; border: 2.5px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin .7s linear infinite; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 1.5rem; right: 1.5rem;
+      color: white; padding: 10px 16px; border-radius: 9px;
+      font-size: 13px; display: none; z-index: 999;
+      max-width: 320px; box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      animation: fadeUp .25s ease;
+    }
+
+    @keyframes spin   { to { transform: rotate(360deg); } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+
+<!-- ═══════ SIDEBAR ═══════ -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
+    </div>
+    <div class="logo-text"><h2>Rekap Gaji</h2><p>Admin Cabang</p></div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Menu Utama</div>
+    <a class="nav-item" href="dashboard.html">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </a>
+    <a class="nav-item" href="laporan.html">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Laporan WO
+    </a>
+    <a class="nav-item" href="input-laporan.html">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      Input Laporan
+    </a>
+    <a class="nav-item active" href="notifikasi.html">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      Notifikasi
+      <span class="nav-badge" id="badge-notif">0</span>
+    </a>
+    <a class="nav-item" href="slip-gaji.html">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Slip Gaji Teknisi
+    </a>
+  </div>
+  <div class="user-box">
+    <div class="avatar" id="user-avatar">?</div>
+    <div>
+      <div class="user-name" id="user-nama">-</div>
+      <div class="user-role">Admin Cabang</div>
+      <button class="btn-logout" onclick="logout()">Keluar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ MAIN ═══════ -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="topbar-title">Notifikasi Pembayaran</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <!-- Tombol refresh manual -->
+      <button class="btn-refresh" id="btn-refresh" onclick="refreshNotifikasi()">
+        <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        Refresh
+      </button>
+      <!-- Tab filter -->
+      <div class="tab-bar">
+        <button class="tab active" id="tab-semua"   onclick="gantiTab('semua')">
+          Semua
+          <span class="tab-count" id="cnt-semua" style="display:none">0</span>
+        </button>
+        <button class="tab" id="tab-menunggu" onclick="gantiTab('menunggu')">
+          Perlu Konfirmasi
+          <span class="tab-count" id="cnt-menunggu" style="display:none">0</span>
+        </button>
+        <button class="tab" id="tab-selesai" onclick="gantiTab('selesai')">
+          Sudah Dikonfirmasi
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="notif-list" id="notif-list">
+      <div class="spinner-wrap"><div class="spinner"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ MODAL SCREENSHOT ═══════ -->
+<div class="ss-overlay" id="ss-overlay">
+  <div class="ss-box" id="ss-box">
+    <div class="ss-hdr">
+      <span class="ss-hdr-title" id="ss-title">Bukti Transfer</span>
+      <button class="ss-close" onclick="tutupSS()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="ss-img-wrap" id="ss-img-wrap">
+      <div class="no-ss">Tidak ada bukti transfer</div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══════ SCRIPTS ═══════ -->
+<script src="/shared/auth.js"></script>
+<script>
+  // ── Guard auth ─────────────────────────────────────────────────────────
+  if (!requireAuth("admin_cabang")) throw new Error("Unauthorized");
+  initUserInfo();
+
+  // ── State ──────────────────────────────────────────────────────────────
+  let semuaNotif = [];
+  let tabAktif   = "semua";
+
+  // ── Load notifikasi dari API ───────────────────────────────────────────
+  async function loadNotifikasi() {
+    document.getElementById("notif-list").innerHTML =
+      '<div class="spinner-wrap"><div class="spinner"></div></div>';
+
+    const data = await apiFetch("/admin-cabang/notifikasi");
+
+    if (!data) {
+      renderError("Tidak dapat terhubung ke server.");
+      return;
+    }
+    if (!data.success) {
+      renderError(data.message || "Gagal memuat notifikasi.");
+      return;
+    }
+
+    semuaNotif = data.data || [];
+    updateBadgeCount();
+    render();
+  }
+
+  // ── Refresh dengan animasi ─────────────────────────────────────────────
+  async function refreshNotifikasi() {
+    const btn = document.getElementById("btn-refresh");
+    btn.classList.add("spinning");
+    btn.disabled = true;
+    await loadNotifikasi();
+    btn.classList.remove("spinning");
+    btn.disabled = false;
+  }
+
+  // ── Update badge sidebar & tab count ──────────────────────────────────
+  function updateBadgeCount() {
+    const belumKonfirm = semuaNotif.filter(n => !n.is_dikonfirmasi).length;
+
+    // Badge sidebar
+    const badge = document.getElementById("badge-notif");
+    badge.textContent = belumKonfirm;
+    badge.classList.toggle("show", belumKonfirm > 0);
+
+    // Count tab "Semua"
+    const cntSemua = document.getElementById("cnt-semua");
+    if (semuaNotif.length > 0) {
+      cntSemua.textContent = semuaNotif.length;
+      cntSemua.style.display = "inline-flex";
+    } else {
+      cntSemua.style.display = "none";
+    }
+
+    // Count tab "Perlu Konfirmasi"
+    const cntMenunggu = document.getElementById("cnt-menunggu");
+    if (belumKonfirm > 0) {
+      cntMenunggu.textContent = belumKonfirm;
+      cntMenunggu.style.display = "inline-flex";
+    } else {
+      cntMenunggu.style.display = "none";
+    }
+  }
+
+  // ── Ganti tab ─────────────────────────────────────────────────────────
+  function gantiTab(tab) {
+    tabAktif = tab;
+    ["semua", "menunggu", "selesai"].forEach(t => {
+      document.getElementById(`tab-${t}`).classList.toggle("active", t === tab);
+    });
+    render();
+  }
+
+  // ── Filter & render list ──────────────────────────────────────────────
+  function render() {
+    let filtered = semuaNotif;
+    if (tabAktif === "menunggu") filtered = semuaNotif.filter(n => !n.is_dikonfirmasi);
+    if (tabAktif === "selesai")  filtered = semuaNotif.filter(n =>  n.is_dikonfirmasi);
+
+    const cont = document.getElementById("notif-list");
+
+    if (filtered.length === 0) {
+      const emptyMsg = {
+        semua:    "Belum ada notifikasi pembayaran masuk.",
+        menunggu: "Tidak ada notifikasi yang perlu dikonfirmasi.",
+        selesai:  "Belum ada notifikasi yang sudah dikonfirmasi.",
+      }[tabAktif];
+
+      cont.innerHTML = `
+        <div class="state-box">
+          <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <div class="state-title">Tidak ada notifikasi</div>
+          <div class="state-sub">${escHtml(emptyMsg)}</div>
+        </div>`;
+      return;
+    }
+
+    cont.innerHTML = "";
+    filtered.forEach((n, i) => {
+      cont.appendChild(buatKartu(n, i));
+    });
+  }
+
+  // ── Buat elemen kartu notifikasi ─────────────────────────────────────
+  function buatKartu(n, i) {
+    const sudahKonfirm = !!n.is_dikonfirmasi;
+    const sudahDibaca  = !!n.is_dibaca;
+
+    const cardClass = "notif-card" +
+      (sudahKonfirm ? " confirmed" : !sudahDibaca ? " unread" : "");
+
+    const dotClass = sudahKonfirm ? "dot-confirmed" : sudahDibaca ? "dot-read" : "dot-unread";
+
+    const statusBadge = sudahKonfirm
+      ? `<span class="notif-status ns-confirmed">
+           <svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"><polyline points="20 6 9 17 4 12"/></svg>
+           Dikonfirmasi
+         </span>`
+      : `<span class="notif-status ns-menunggu">⏳ Menunggu Konfirmasi</span>`;
+
+    // ── FIX: gunakan data-* attribute untuk screenshot path
+    //    agar tidak ada raw JS injection lewat path yang mengandung karakter khusus
+    const tglTransferHtml = n.tgl_transfer
+      ? `<span class="tgl-transfer">
+           <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+           Transfer: ${escHtml(tglFormat(n.tgl_transfer))}
+         </span>`
+      : "";
+
+    const ssBtn = `
+      <button class="ss-link"
+              data-ss-path="${escHtml(n.screenshot_path || '')}"
+              data-teknisi="${escHtml(n.nama_teknisi || '')}">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        Lihat Bukti Transfer
+      </button>`;
+
+    let konfirmasiHtml;
+    if (sudahKonfirm) {
+      konfirmasiHtml = `
+        <div>
+          <div class="konfirm-ok">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Sudah dikonfirmasi
+          </div>
+          <div class="tgl-konfirm">pada ${escHtml(tglJamFormat(n.tgl_konfirmasi))}</div>
+        </div>`;
+    } else {
+      konfirmasiHtml = `
+        <button class="btn-konfirm" data-notif-id="${n.id}">
+          <div class="spin-btn"></div>
+          <span class="konfirm-label">
+            <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;display:inline;vertical-align:middle;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg>
+            Konfirmasi Sudah Diterima
+          </span>
+        </button>`;
+    }
+
+    const div = document.createElement("div");
+    div.className = cardClass;
+    div.style.animationDelay = `${i * 0.06}s`;
+    div.dataset.notifId = n.id;
+    div.innerHTML = `
+      <div class="notif-hdr">
+        <div class="notif-dot ${dotClass}"></div>
+        <div class="notif-content">
+          <div class="notif-title">
+            <strong>${escHtml(n.nama_teknisi)}</strong> telah menerima pembayaran gaji dari
+            <strong>${escHtml(n.nama_admin_pusat)}</strong>
+          </div>
+          <div class="notif-meta">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            ${escHtml(tglJamFormat(n.created_at))}
+          </div>
+        </div>
+        ${statusBadge}
+      </div>
+
+      <div class="notif-detail">
+        <div class="nd-cell">
+          <div class="nd-label">Total Gaji</div>
+          <div class="nd-val blue">${escHtml(rupiah(n.total_gaji))}</div>
+        </div>
+        <div class="nd-cell">
+          <div class="nd-label">Potongan</div>
+          <div class="nd-val red">− ${escHtml(rupiah(n.total_potongan))}</div>
+        </div>
+        <div class="nd-cell">
+          <div class="nd-label">Gaji Bersih</div>
+          <div class="nd-val green">${escHtml(rupiah(n.gaji_bersih))}</div>
+        </div>
+      </div>
+
+      <div class="notif-ftr">
+        <div class="notif-ftr-left">
+          ${ssBtn}
+          ${tglTransferHtml}
+        </div>
+        <div>${konfirmasiHtml}</div>
+      </div>`;
+
+    return div;
+  }
+
+  // ── Event delegation: ss-link & btn-konfirm ───────────────────────────
+  // Lebih aman & efisien daripada onclick inline di setiap kartu
+  document.getElementById("notif-list").addEventListener("click", async function(e) {
+    // Tombol lihat screenshot
+    const ssBtn = e.target.closest("[data-ss-path]");
+    if (ssBtn) {
+      bukaScreenshot(ssBtn.dataset.ssPath, ssBtn.dataset.teknisi);
+      return;
+    }
+
+    // Tombol konfirmasi
+    const konfBtn = e.target.closest("[data-notif-id].btn-konfirm");
+    if (konfBtn) {
+      await konfirmasi(parseInt(konfBtn.dataset.notifId, 10), konfBtn);
+    }
+  });
+
+  // ── Proses konfirmasi ─────────────────────────────────────────────────
+  async function konfirmasi(id, btn) {
+    // Cegah double-click
+    if (btn.disabled) return;
+    btn.disabled = true;
+    btn.classList.add("loading");
+
+    const data = await apiFetch(`/admin-cabang/notifikasi/${id}/konfirmasi`, {
+      method: "PATCH",
+    });
+
+    if (!data?.success) {
+      btn.disabled = false;
+      btn.classList.remove("loading");
+      showToast(data?.message || "Gagal mengkonfirmasi. Coba lagi.", false);
+      return;
+    }
+
+    showToast("✓ Konfirmasi berhasil disimpan!");
+
+    // Update state lokal tanpa full reload
+    const idx = semuaNotif.findIndex(n => n.id === id);
+    if (idx !== -1) {
+      semuaNotif[idx].is_dikonfirmasi = 1;
+      semuaNotif[idx].is_dibaca       = 1;
+      semuaNotif[idx].tgl_konfirmasi  = new Date().toISOString();
+    }
+
+    updateBadgeCount();
+    render();
+  }
+
+  // ── Modal screenshot ──────────────────────────────────────────────────
+  function bukaScreenshot(path, namaTek) {
+    const wrap = document.getElementById("ss-img-wrap");
+
+    // FIX: normalkan path — jika tidak diawali http/https, tambahkan prefix /uploads/
+    let src = path || "";
+    if (src && !src.startsWith("http") && !src.startsWith("/")) {
+      src = "/uploads/" + src;
+    }
+
+    document.getElementById("ss-title").textContent =
+      `Bukti Transfer — ${namaTek || ""}`;
+
+    if (src) {
+      wrap.innerHTML = `
+        <img src="${escHtml(src)}" alt="Bukti transfer ${escHtml(namaTek || '')}"
+             onerror="this.outerHTML='<div class=no-ss>Gambar tidak dapat dimuat. Periksa apakah file masih tersedia di server.</div>'">`;
+    } else {
+      wrap.innerHTML = `<div class="no-ss">Belum ada bukti transfer untuk <strong>${escHtml(namaTek || '-')}</strong>.</div>`;
+    }
+
+    document.getElementById("ss-overlay").classList.add("show");
+    document.body.style.overflow = "hidden";
+  }
+
+  function tutupSS() {
+    document.getElementById("ss-overlay").classList.remove("show");
+    document.body.style.overflow = "";
+  }
+
+  // Klik backdrop → tutup modal
+  document.getElementById("ss-overlay").addEventListener("click", function(e) {
+    // Tutup hanya jika klik tepat di overlay, bukan di dalam ss-box
+    if (!document.getElementById("ss-box").contains(e.target)) {
+      tutupSS();
+    }
+  });
+
+  // ESC → tutup modal
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") tutupSS();
+  });
+
+  // ── Render error ──────────────────────────────────────────────────────
+  function renderError(msg) {
+    document.getElementById("notif-list").innerHTML = `
+      <div class="state-box">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div class="state-title">Gagal memuat notifikasi</div>
+        <div class="state-sub">${escHtml(msg)}</div>
+        <button class="btn-coba-lagi" onclick="loadNotifikasi()">Coba Lagi</button>
+      </div>`;
+  }
+
+  // ── Escape HTML ───────────────────────────────────────────────────────
+  function escHtml(str) {
+    return String(str ?? "")
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────
+  loadNotifikasi();
+</script>
+</body>
+</html>
