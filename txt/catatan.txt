@@ -7,7 +7,10 @@ Catatan website jadi
 
 
 Kekurangan Admin Pusat
-1. Sinkronisasi side
+1. Sinkronisasi side (DONE)
 2. Tambah filter cabang di dashboard (DONE)
 3. Status Progress pusat ditambahkan, saat laporan masuk status nya : verifikasi, saat di proses : diproses, menunggu status dikirim : kirim notifikasi, selesai kirim notifikasi : selesai (DONE)
-4. Halaman kirim notifikasi : muncul jumlah notifikasi yang perlu dikirim
+4. Halaman kirim notifikasi : muncul jumlah notifikasi yang perlu dikirim (DONE)
+5. Jumlah notifikasi belum muncul di halaman dashboard dan laporan masuk (DONE)
+
+Revisi Admin Cabang
