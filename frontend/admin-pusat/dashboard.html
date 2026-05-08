@@ -370,15 +370,24 @@
     return "Rp " + Number(n).toLocaleString("id-ID");
   }
 
+  // function renderMetrics(d) {
+  //   document.getElementById("m-laporan").textContent     = d.laporan_masuk;
+  //   document.getElementById("m-gaji").textContent        = rupiah(d.total_gaji_dibayar);
+  //   document.getElementById("m-tek-dibayar").textContent = d.teknisi_dibayar;
+  //   document.getElementById("m-konfirmasi").textContent  = d.menunggu_konfirmasi;
+  //   const badge = document.getElementById("badge-laporan");
+  //   if (d.laporan_masuk > 0) { badge.textContent = d.laporan_masuk; badge.classList.add("show"); }
+  //   else badge.classList.remove("show");
+  // }
   function renderMetrics(d) {
-    document.getElementById("m-laporan").textContent     = d.laporan_masuk;
-    document.getElementById("m-gaji").textContent        = rupiah(d.total_gaji_dibayar);
-    document.getElementById("m-tek-dibayar").textContent = d.teknisi_dibayar;
-    document.getElementById("m-konfirmasi").textContent  = d.menunggu_konfirmasi;
-    const badge = document.getElementById("badge-laporan");
-    if (d.laporan_masuk > 0) { badge.textContent = d.laporan_masuk; badge.classList.add("show"); }
-    else badge.classList.remove("show");
-  }
+  document.getElementById("m-laporan").textContent     = d.laporan_masuk;
+  document.getElementById("m-gaji").textContent        = rupiah(d.total_gaji_dibayar);
+  document.getElementById("m-tek-dibayar").textContent = d.teknisi_dibayar;
+  document.getElementById("m-konfirmasi").textContent  = d.menunggu_konfirmasi;
+  
+  // HAPUS: manual badge laporan dari sini
+  // updateBadgeLaporan(d.laporan_masuk);  ← HAPUS
+}
 
   function renderRingkasan(ringkasan, bulan, tahun) {
     const tbl = document.getElementById("tbl-ringkasan");
@@ -472,37 +481,105 @@
   }
 
   async function loadDashboard(bulan, tahun, cabangId = "") {
-    setMetricLoading();
-    setSectionLoading();
-    renderChips(bulan, tahun, cabangId);
-    updateMetricSub(bulan, tahun, cabangId);
+  setMetricLoading();
+  setSectionLoading();
+  renderChips(bulan, tahun, cabangId);
+  updateMetricSub(bulan, tahun, cabangId);
 
-    let qs = `bulan=${bulan}&tahun=${tahun}`;
-    if (cabangId) qs += `&cabang_id=${encodeURIComponent(cabangId)}`;
+  let qs = `bulan=${bulan}&tahun=${tahun}`;
+  if (cabangId) qs += `&cabang_id=${encodeURIComponent(cabangId)}`;
 
-    const data = await apiFetch(`/admin-pusat/dashboard?${qs}`);
-    if (!data?.success) { showToast("Gagal memuat dashboard"); return; }
+  const data = await apiFetch(`/admin-pusat/dashboard?${qs}`);
+  if (!data?.success) { showToast("Gagal memuat dashboard"); return; }
 
-    const d = data.data;
-    renderMetrics(d);
-    renderRingkasan(d.ringkasan, bulan, tahun);
-    renderAktivitas(d.ringkasan, bulan, tahun);
-    renderStatusCabang(d.status_cabang);
+  const d = data.data;
+  renderMetrics(d);
+  renderRingkasan(d.ringkasan, bulan, tahun);
+  renderAktivitas(d.ringkasan, bulan, tahun);
+  renderStatusCabang(d.status_cabang);
+  
+  // AUTO REFRESH SIDEBAR BADGE
+  loadBadgeLaporan();
+  loadBadgeNotif();
+}
+
+function terapkanFilter() {
+  const bulan    = parseInt(document.getElementById("filter-bulan").value);
+  const tahun    = parseInt(document.getElementById("filter-tahun").value);
+  const cabangId = document.getElementById("filter-cabang").value;
+  const btn = document.getElementById("btn-terapkan");
+  btn.disabled = true;
+  loadDashboard(bulan, tahun, cabangId).finally(() => btn.disabled = false);
+}
+
+  // ── SIDEBAR BADGE FUNCTIONS ──────────────────────────────────────────────
+
+// Update badge laporan (status: terkirim = perlu verifikasi)
+function updateBadgeLaporan(n) {
+  const el = document.getElementById("badge-laporan");
+  if (n > 0) { el.textContent = n; el.classList.add("show"); }
+  else el.classList.remove("show");
+}
+
+// Update badge notifikasi (rekap dibayar, notif belum dikirim) - WARNA MERAH
+function updateBadgeNotif(n) {
+  const el = document.getElementById("badge-notif");
+  if (n > 0) { 
+    el.textContent = n; 
+    el.classList.add("show"); 
+  } else { 
+    el.classList.remove("show"); 
   }
+}
 
-  function terapkanFilter() {
-    const bulan    = parseInt(document.getElementById("filter-bulan").value);
-    const tahun    = parseInt(document.getElementById("filter-tahun").value);
-    const cabangId = document.getElementById("filter-cabang").value;
-    const btn = document.getElementById("btn-terapkan");
-    btn.disabled = true;
-    loadDashboard(bulan, tahun, cabangId).finally(() => btn.disabled = false);
-  }
+// Load badge laporan masuk (status=terkirim)
+async function loadBadgeLaporan() {
+  try {
+    const res = await apiFetch("/admin-pusat/laporan-masuk?status=terkirim");
+    if (res?.success && Array.isArray(res.data)) {
+      updateBadgeLaporan(res.data.length);
+    }
+  } catch (_) {}
+}
 
-  (async function init() {
-    await loadCabangOptions();
-    loadDashboard(now.getMonth() + 1, now.getFullYear(), "");
-  })();
+// Load badge notifikasi (rekap dibayar yang belum notif) - LOGIKA AKURAT
+async function loadBadgeNotif() {
+  try {
+    const [resRekap, resNotif] = await Promise.all([
+      apiFetch("/admin-pusat/rekap-gaji"),
+      apiFetch("/admin-pusat/notifikasi"),
+    ]);
+
+    if (resRekap?.success && resNotif?.success) {
+      const semuaRekap = resRekap.data || [];
+      const semuaNotif = resNotif.data || [];
+
+      // ID rekap yang sudah dikirim notifikasinya
+      const sudahDikirimIds = new Set(
+        semuaNotif.map(n => n.rekap_gaji_id).filter(id => id != null)
+      );
+
+      // Rekap "dibayar" yang BELUM dinotifikasi ke cabang
+      const belum = semuaRekap.filter(r =>
+        r.status === "dibayar" && !sudahDikirimIds.has(r.id)
+      ).length;
+
+      updateBadgeNotif(belum);
+    }
+  } catch (_) {}
+}
+
+(async function init() {
+  await loadCabangOptions();
+  
+  // LOAD SIDEBAR BADGE SAAT INIT
+  await Promise.all([
+    loadBadgeLaporan(),
+    loadBadgeNotif()
+  ]);
+  
+  loadDashboard(now.getMonth() + 1, now.getFullYear(), "");
+})();
 </script>
 </body>
 </html>

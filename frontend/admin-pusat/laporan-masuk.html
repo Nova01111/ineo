@@ -258,7 +258,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       Kirim Notifikasi
       <!-- Badge: jumlah laporan selesai yang belum dikirim notifikasinya -->
-      <span class="nav-badge blue" id="badge-notif">0</span>
+      <span class="nav-badge" id="badge-notif">0</span>
     </a>
     <a class="nav-item" href="/admin-pusat/rekap-gaji.html">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
@@ -395,25 +395,65 @@ function updateBadgeLaporan(n) {
 }
 
 // ── Update badge notifikasi (laporan selesai, notif_terkirim = false) ──────
+// function updateBadgeNotif(n) {
+//   const el = document.getElementById("badge-notif");
+//   if (n > 0) { el.textContent = n; el.classList.add("show"); }
+//   else el.classList.remove("show");
+// }
+// ── Update badge notifikasi ──────────────────────────────────────────────
 function updateBadgeNotif(n) {
   const el = document.getElementById("badge-notif");
-  if (n > 0) { el.textContent = n; el.classList.add("show"); }
-  else el.classList.remove("show");
+  if (n > 0) { 
+    el.textContent = n; 
+    el.classList.add("show"); 
+  } else { 
+    el.classList.remove("show"); 
+  }
 }
 
 // ── Load badge notif dari dashboard endpoint ──────────────────────────────
 // Menggunakan endpoint dashboard (sama seperti dashboard.html) untuk
 // menghitung jumlah laporan "selesai" yang belum dikirim notifikasinya.
+// async function loadBadgeNotif() {
+//   try {
+//     const now = new Date();
+//     const res = await apiFetch(`/admin-pusat/dashboard?bulan=${now.getMonth()+1}&tahun=${now.getFullYear()}`);
+//     if (!res?.success) return;
+//     // Hitung dari ringkasan: status selesai && notif_terkirim = false
+//     const ringkasan = res.data?.ringkasan || [];
+//     const n = ringkasan.filter(r => r.status_laporan === "selesai" && !r.notif_terkirim).length;
+//     updateBadgeNotif(n);
+//   } catch (_) {}
+// }
+// ── Update badge notifikasi (laporan selesai, notif belum dikirim) ──────
 async function loadBadgeNotif() {
   try {
-    const now = new Date();
-    const res = await apiFetch(`/admin-pusat/dashboard?bulan=${now.getMonth()+1}&tahun=${now.getFullYear()}`);
-    if (!res?.success) return;
-    // Hitung dari ringkasan: status selesai && notif_terkirim = false
-    const ringkasan = res.data?.ringkasan || [];
-    const n = ringkasan.filter(r => r.status_laporan === "selesai" && !r.notif_terkirim).length;
-    updateBadgeNotif(n);
-  } catch (_) {}
+    // Logika sama persis dengan rekap-gaji.html:
+    // ambil semua rekap + semua notif terkirim, lalu hitung selisihnya
+    const [resRekap, resNotif] = await Promise.all([
+      apiFetch("/admin-pusat/rekap-gaji"),
+      apiFetch("/admin-pusat/notifikasi"),
+    ]);
+
+    if (resRekap?.success && resNotif?.success) {
+      const semuaRekap = resRekap.data || [];
+      const semuaNotif = resNotif.data || [];
+
+      // ID rekap yang sudah pernah dikirim notifikasinya
+      const sudahDikirimIds = new Set(
+        semuaNotif.map(n => n.rekap_gaji_id).filter(id => id != null)
+      );
+
+      // Rekap "dibayar" yang BELUM dinotifikasi ke cabang
+      const belum = semuaRekap.filter(r =>
+        r.status === "dibayar" && !sudahDikirimIds.has(r.id)
+      ).length;
+
+      updateBadgeNotif(belum);
+    }
+  } catch (_) {
+    // Silent fail jika gagal load badge
+  }
 }
 
 // ── Load cabang filter ────────────────────────────────────────────────────
@@ -1012,7 +1052,7 @@ document.getElementById("filter-status").value = "terkirim";
 Promise.all([
   loadCabang(),
   loadJenisPotongan(),
-  loadBadgeNotif(),     // load badge notif saat init
+  loadBadgeNotif(),  // ← PASTIKAN DIPANGGIL DI SINI
 ]).then(() => loadLaporan());
 </script>
 </body>
