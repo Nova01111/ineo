@@ -33,8 +33,9 @@
     .nav-item.active { color: #fff; background: rgba(59,158,255,0.12); border-left-color: var(--blue-acc); font-weight: 500; }
     .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; opacity: .7; }
     .nav-item.active svg { opacity: 1; }
-    .nav-badge { margin-left: auto; background: var(--red); color: white; font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 99px; display: none; }
+    .nav-badge { margin-left: auto; background: var(--red); color: white; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 99px; display: none; min-width: 18px; text-align: center; line-height: 16px; }
     .nav-badge.show { display: inline-block; }
+    .nav-badge.blue { background: var(--blue-acc); }
     .user-box { padding: 1rem 1.375rem; border-top: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; gap: 10px; }
     .avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--blue), var(--blue-acc)); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: white; flex-shrink: 0; }
     .user-name { font-size: 13px; font-weight: 500; color: #fff; }
@@ -155,6 +156,8 @@
 
     /* ═══ TOAST ═══ */
     .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; padding: 10px 16px; border-radius: 9px; font-size: 13px; display: none; z-index: 999; max-width: 320px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); color: white; }
+    .toast.success { background: var(--green); }
+    .toast.error   { background: var(--red); }
 
     @keyframes spin   { to { transform: rotate(360deg); } }
     @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
@@ -179,12 +182,14 @@
     <a class="nav-item" href="/admin-pusat/laporan-masuk.html">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
       Laporan Masuk
+      <!-- Badge: laporan berstatus "terkirim" (perlu verifikasi) -->
       <span class="nav-badge" id="badge-laporan">0</span>
     </a>
     <a class="nav-item active" href="/admin-pusat/notifikasi.html">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       Kirim Notifikasi
-      <span class="nav-badge" id="badge-notif">0</span>
+      <!-- Badge: laporan selesai yang belum dikirim notifikasinya ke cabang -->
+      <span class="nav-badge blue" id="badge-notif">0</span>
     </a>
     <a class="nav-item" href="/admin-pusat/rekap-gaji.html">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
@@ -259,7 +264,6 @@
           <div class="section-title">Riwayat Notifikasi Terkirim</div>
           <div class="section-sub">Semua notifikasi yang sudah dikirim beserta status konfirmasi dari admin cabang</div>
         </div>
-        <!-- Tab filter -->
         <div class="tab-bar">
           <button class="tab active" id="tab-semua"  onclick="gantiTab('semua')">
             Semua <span class="tab-count" id="cnt-semua" style="display:none"></span>
@@ -277,12 +281,10 @@
       </div>
     </div>
 
-  </div><!-- /content -->
-</div><!-- /main -->
+  </div>
+</div>
 
-<!-- ══════════════════════════════════════════════
-     MODAL KONFIRMASI KIRIM NOTIFIKASI
-══════════════════════════════════════════════ -->
+<!-- MODAL KONFIRMASI KIRIM NOTIFIKASI -->
 <div class="overlay" id="overlay-konfirm">
   <div class="modal">
     <div class="modal-icon">
@@ -292,9 +294,7 @@
     <div class="modal-body-text">
       Admin cabang akan menerima pemberitahuan bahwa teknisi berikut sudah mendapatkan gaji dan diminta mengkonfirmasi.
     </div>
-    <div class="modal-preview" id="modal-preview">
-      <!-- Diisi JS -->
-    </div>
+    <div class="modal-preview" id="modal-preview"></div>
     <div class="modal-ftr">
       <button class="btn" onclick="tutupKonfirm()">Batal</button>
       <button class="btn btn-green" id="btn-kirim-konfirm" onclick="kirimNotifikasi()">
@@ -313,7 +313,7 @@
 if (!requireAuth("admin_pusat")) throw new Error("Unauthorized");
 initUserInfo();
 
-// ── State ───────────────────────────────────────────────────────────────
+// ── State ────────────────────────────────────────────────────────────────
 const BLN = ["","Januari","Februari","Maret","April","Mei","Juni","Juli",
              "Agustus","September","Oktober","November","Desember"];
 let semuaNotif      = [];
@@ -321,25 +321,49 @@ let rekapBelum      = [];
 let sudahDikirimIds = new Set();
 let tabAktif        = "semua";
 let rekapTarget     = null;
+let toastTimer      = null;
 
-// ── Init ────────────────────────────────────────────────────────────────
+// ── Init ─────────────────────────────────────────────────────────────────
 async function init() {
-  await loadRiwayat();    // harus selesai dulu agar sudahDikirimIds terisi
-  await loadBelumNotif(); // baru filter pakai sudahDikirimIds
+  // Muat kedua badge sidebar secara paralel dengan data utama
+  await Promise.all([
+    loadBadgeLaporan(),
+    loadRiwayat(),
+  ]);
+  await loadBelumNotif();
 }
 
-// ── Refresh manual ──────────────────────────────────────────────────────
+// ── Refresh manual ────────────────────────────────────────────────────────
 async function refresh() {
   const btn = document.getElementById("btn-refresh");
   btn.classList.add("spinning");
   btn.disabled = true;
-  await loadRiwayat();
+  await Promise.all([
+    loadBadgeLaporan(),
+    loadRiwayat(),
+  ]);
   await loadBelumNotif();
   btn.classList.remove("spinning");
   btn.disabled = false;
 }
 
-// ── Load riwayat notifikasi ─────────────────────────────────────────────
+// ── Badge laporan: jumlah laporan berstatus "terkirim" (perlu verifikasi) ─
+// Konsisten dengan dashboard.html dan laporan-masuk.html
+async function loadBadgeLaporan() {
+  try {
+    const now = new Date();
+    const res = await apiFetch(`/admin-pusat/dashboard?bulan=${now.getMonth()+1}&tahun=${now.getFullYear()}`);
+    if (!res?.success) return;
+    // Hitung dari ringkasan: status_laporan === "terkirim"
+    const ringkasan = res.data?.ringkasan || [];
+    const n = ringkasan.filter(r => r.status_laporan === "terkirim").length;
+    const el = document.getElementById("badge-laporan");
+    if (n > 0) { el.textContent = n; el.classList.add("show"); }
+    else el.classList.remove("show");
+  } catch (_) {}
+}
+
+// ── Load riwayat notifikasi ───────────────────────────────────────────────
 async function loadRiwayat() {
   document.getElementById("notif-wrap").innerHTML =
     '<div class="spinner-wrap"><div class="spinner"></div></div>';
@@ -353,7 +377,6 @@ async function loadRiwayat() {
 
   semuaNotif = data.data || [];
 
-  // rekap_gaji_id sekarang sudah ada di response (sudah ditambah di backend)
   sudahDikirimIds = new Set(
     semuaNotif.map(n => n.rekap_gaji_id).filter(id => id != null)
   );
@@ -362,7 +385,7 @@ async function loadRiwayat() {
   renderNotif();
 }
 
-// ── Load rekap yang belum dinotifikasi ──────────────────────────────────
+// ── Load rekap yang belum dinotifikasi ────────────────────────────────────
 async function loadBelumNotif() {
   document.getElementById("belum-wrap").innerHTML =
     '<div class="spinner-wrap"><div class="spinner"></div></div>';
@@ -376,7 +399,7 @@ async function loadBelumNotif() {
 
   const semuaRekap = dataRekap.data || [];
 
-  // Hanya tampilkan rekap dibayar yang belum ada notifikasinya
+  // Hanya rekap berstatus "dibayar" yang belum ada notifikasinya
   rekapBelum = semuaRekap.filter(r =>
     r.status === "dibayar" && !sudahDikirimIds.has(r.id)
   );
@@ -385,24 +408,27 @@ async function loadBelumNotif() {
   renderBelum();
 }
 
-// ── Update metrics ──────────────────────────────────────────────────────
+// ── Update metrics + kedua badge sidebar ─────────────────────────────────
 function updateMetrics(semuaRekap) {
   const terkirim = semuaNotif.length;
   const konfirm  = semuaNotif.filter(n => n.is_dikonfirmasi).length;
   const tunggu   = terkirim - konfirm;
-  const belum    = rekapBelum.length; // pakai array yang sudah difilter
+  const belum    = rekapBelum.length;
 
   document.getElementById("m-belum").textContent   = belum;
   document.getElementById("m-terkirim").textContent = terkirim;
   document.getElementById("m-konfirm").textContent  = konfirm;
   document.getElementById("m-tunggu").textContent   = tunggu;
 
-  const badge = document.getElementById("badge-notif");
-  if (tunggu > 0) { badge.textContent = tunggu; badge.classList.add("show"); }
-  else badge.classList.remove("show");
+  // ── Badge "Kirim Notifikasi": jumlah rekap dibayar belum dinotifikasi ──
+  // Konsisten dengan dashboard.html & laporan-masuk.html
+  // (menggunakan rekapBelum yang sudah difilter = status dibayar + belum notif)
+  const elNotif = document.getElementById("badge-notif");
+  if (belum > 0) { elNotif.textContent = belum; elNotif.classList.add("show"); }
+  else elNotif.classList.remove("show");
 }
 
-// ── Update tab count ────────────────────────────────────────────────────
+// ── Update tab count ──────────────────────────────────────────────────────
 function updateTabCount() {
   const tunggu = semuaNotif.filter(n => !n.is_dikonfirmasi).length;
 
@@ -415,7 +441,7 @@ function updateTabCount() {
   cntTunggu.style.display = tunggu > 0 ? "inline-flex" : "none";
 }
 
-// ── Render: rekap belum dinotifikasi ────────────────────────────────────
+// ── Render: rekap belum dinotifikasi ─────────────────────────────────────
 function renderBelum() {
   const wrap = document.getElementById("belum-wrap");
 
@@ -486,7 +512,7 @@ function renderBelum() {
   });
 }
 
-// ── Render: riwayat notifikasi ───────────────────────────────────────────
+// ── Render: riwayat notifikasi ────────────────────────────────────────────
 function renderNotif() {
   let filtered = semuaNotif;
   if (tabAktif === "tunggu")  filtered = semuaNotif.filter(n => !n.is_dikonfirmasi);
@@ -568,7 +594,7 @@ function renderNotif() {
   });
 }
 
-// ── Ganti tab ───────────────────────────────────────────────────────────
+// ── Ganti tab ─────────────────────────────────────────────────────────────
 function gantiTab(tab) {
   tabAktif = tab;
   ["semua","tunggu","konfirm"].forEach(t => {
@@ -577,7 +603,7 @@ function gantiTab(tab) {
   renderNotif();
 }
 
-// ── Modal konfirmasi kirim ───────────────────────────────────────────────
+// ── Modal konfirmasi kirim ────────────────────────────────────────────────
 function bukaKonfirm(btn) {
   rekapTarget = {
     id      : parseInt(btn.dataset.rekapId),
@@ -623,7 +649,7 @@ document.getElementById("overlay-konfirm").addEventListener("click", function(e)
   if (e.target === this) tutupKonfirm();
 });
 
-// ── Kirim notifikasi ─────────────────────────────────────────────────────
+// ── Kirim notifikasi ──────────────────────────────────────────────────────
 async function kirimNotifikasi() {
   if (!rekapTarget) return;
 
@@ -645,19 +671,21 @@ async function kirimNotifikasi() {
       Kirim Sekarang`;
 
     if (data?.message?.includes("sudah pernah")) {
-      showToast("Notifikasi untuk rekap ini sudah pernah dikirim sebelumnya.", false);
+      showToast("Notifikasi untuk rekap ini sudah pernah dikirim sebelumnya.", "error");
       // Hapus dari list karena ternyata sudah terkirim
       sudahDikirimIds.add(rekapTarget.id);
       rekapBelum = rekapBelum.filter(r => r.id !== rekapTarget.id);
       renderBelum();
+      // Sinkron ulang badge setelah hapus
+      updateMetrics([]);
     } else {
-      showToast(data?.message || "Gagal mengirim notifikasi.", false);
+      showToast(data?.message || "Gagal mengirim notifikasi.", "error");
     }
     tutupKonfirm();
     return;
   }
 
-  showToast("✓ Notifikasi berhasil dikirim ke admin cabang!");
+  showToast("Notifikasi berhasil dikirim ke admin cabang!", "success");
 
   // Hapus dari list secara langsung tanpa reload halaman
   sudahDikirimIds.add(rekapTarget.id);
@@ -666,20 +694,20 @@ async function kirimNotifikasi() {
 
   tutupKonfirm();
 
-  // Reload riwayat agar notif baru muncul di daftar bawah
+  // Reload riwayat agar notif baru muncul + sinkron badge
   await loadRiwayat();
 
-  // Update metrics dengan data rekap terbaru
+  // Update metrics dengan data rekap terbaru — badge sidebar ikut diperbarui
   const dataRekap = await apiFetch("/admin-pusat/rekap-gaji");
   if (dataRekap?.success) updateMetrics(dataRekap.data || []);
 }
 
-// ── ESC close modal ──────────────────────────────────────────────────────
+// ── ESC close modal ───────────────────────────────────────────────────────
 document.addEventListener("keydown", e => {
   if (e.key === "Escape") tutupKonfirm();
 });
 
-// ── Helpers ──────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────
 function escHtml(str) {
   return String(str ?? "")
     .replace(/&/g,"&amp;").replace(/</g,"&lt;")
@@ -693,6 +721,15 @@ function renderStateError(msg) {
     <div class="state-sub">${escHtml(msg)}</div>
     <button onclick="refresh()" class="btn" style="margin-top:8px">Coba Lagi</button>
   </div>`;
+}
+
+function showToast(msg, type = "success") {
+  if (toastTimer) clearTimeout(toastTimer);
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = `toast ${type}`;
+  t.style.display = "block";
+  toastTimer = setTimeout(() => { t.style.display = "none"; }, 4000);
 }
 
 // ── Start ─────────────────────────────────────────────────────────────────

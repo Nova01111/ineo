@@ -110,7 +110,6 @@
     /* ═══ DETAIL PANEL ═══ */
     .detail-overlay { position: fixed; inset: 0; background: rgba(15,31,56,.55); backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: flex-start; justify-content: flex-end; opacity: 0; pointer-events: none; transition: opacity .2s; }
     .detail-overlay.show { opacity: 1; pointer-events: all; }
-    /* FIX pointer-events: panel tidak blok klik saat tertutup */
     .detail-panel { width: 560px; max-width: 96vw; height: 100vh; background: var(--white); overflow-y: auto; transform: translateX(100%); transition: transform .28s cubic-bezier(.16,1,.3,1); pointer-events: none; display: flex; flex-direction: column; }
     .detail-overlay.show .detail-panel { transform: translateX(0); pointer-events: all; }
 
@@ -156,7 +155,6 @@
     .date-input { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 7px; font-size: 13px; font-family: 'DM Sans', sans-serif; color: var(--text); outline: none; margin-bottom: 10px; }
     .date-input:focus { border-color: var(--blue-acc); }
 
-    /* Tab pilih metode */
     .upload-tabs { display: flex; gap: 4px; margin-bottom: 10px; }
     .upload-tab { font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--white); color: var(--text-3); cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; gap: 5px; }
     .upload-tab:hover { background: var(--bg); color: var(--text-2); }
@@ -165,7 +163,6 @@
     .upload-tab-content { display: none; }
     .upload-tab-content.show { display: block; }
 
-    /* Drop zone */
     .drop-zone { border: 2px dashed var(--border); border-radius: 9px; background: var(--bg); padding: 1.5rem 1rem; text-align: center; cursor: pointer; transition: border-color .15s, background .15s; position: relative; }
     .drop-zone:hover, .drop-zone.dragover { border-color: var(--blue-acc); background: var(--blue-lt); }
     .drop-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
@@ -175,7 +172,6 @@
     .dz-sub  { font-size: 11.5px; color: var(--text-3); }
     .dz-sub span { color: var(--blue); font-weight: 500; }
 
-    /* Preview foto */
     .foto-preview { display: none; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; background: var(--bg); }
     .foto-preview.show { display: block; }
     .preview-img-wrap { position: relative; }
@@ -191,29 +187,24 @@
     .preview-info-name { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
     .preview-info-size { color: var(--text-3); flex-shrink: 0; }
 
-    /* Upload progress */
     .upload-progress { margin-top: 8px; display: none; }
     .upload-progress.show { display: block; }
     .progress-bar-wrap { height: 4px; background: var(--border); border-radius: 99px; overflow: hidden; }
     .progress-bar { height: 100%; background: var(--blue-acc); border-radius: 99px; width: 0%; transition: width .3s ease; }
     .progress-text { font-size: 11px; color: var(--text-3); margin-top: 4px; display: flex; justify-content: space-between; }
 
-    /* Upload status */
     .upload-status { display: none; margin-top: 8px; padding: 8px 12px; border-radius: 7px; font-size: 12.5px; font-weight: 500; align-items: center; gap: 8px; }
     .upload-status.show { display: flex; }
     .upload-status.sukses { background: var(--green-lt); color: var(--green); border: 1px solid var(--green-bdr); }
     .upload-status.error  { background: var(--red-lt);   color: var(--red);   border: 1px solid var(--red-bdr); }
     .upload-status svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; flex-shrink: 0; }
 
-    /* URL manual input */
     .url-input { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 7px; font-size: 13px; font-family: 'DM Sans', sans-serif; color: var(--text); outline: none; }
     .url-input:focus { border-color: var(--blue-acc); }
     .url-hint { font-size: 11.5px; color: var(--text-3); margin-top: 5px; }
 
-    /* Footer panel */
     .dp-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border-2); display: flex; gap: 8px; justify-content: flex-end; position: sticky; bottom: 0; background: var(--white); }
 
-    /* Error box */
     .error-msg { background: var(--red-lt); border: 1px solid var(--red-bdr); border-radius: 7px; padding: 8px 12px; font-size: 13px; color: var(--red); margin-bottom: 1rem; display: none; }
 
     /* ═══ STATE ═══ */
@@ -260,14 +251,14 @@
     <a class="nav-item active" href="/admin-pusat/laporan-masuk.html">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
       Laporan Masuk
-      <!-- Badge: jumlah laporan berstatus terkirim (perlu verifikasi) -->
+      <!-- Badge: jumlah laporan berstatus "terkirim" (perlu verifikasi) -->
       <span class="nav-badge" id="badge-laporan">0</span>
     </a>
     <a class="nav-item" href="/admin-pusat/notifikasi.html">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       Kirim Notifikasi
-      <!-- Badge: jumlah notifikasi belum dibaca -->
-      <span class="nav-badge blue" id="badge-notifikasi">0</span>
+      <!-- Badge: jumlah laporan selesai yang belum dikirim notifikasinya -->
+      <span class="nav-badge blue" id="badge-notif">0</span>
     </a>
     <a class="nav-item" href="/admin-pusat/rekap-gaji.html">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
@@ -359,16 +350,15 @@ initUserInfo();
 // ── Konstanta & State global ──────────────────────────────────────────────
 const BLN = ["","Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
 
-let laporanAktif    = null;   // id laporan yang sedang dibuka
+let laporanAktif    = null;
 let jenisPotongan   = [];
 let totalGajiAktif  = 0;
-let rekapDataAktif  = null;   // simpan data laporan aktif untuk notifikasi
-let fotoFile        = null;   // File object dipilih user
-let fotoUploadedUrl = null;   // URL setelah upload berhasil
+let rekapDataAktif  = null;
+let fotoFile        = null;
+let fotoUploadedUrl = null;
 let toastTimer      = null;
 
-// ── Helper: format rupiah ─────────────────────────────────────────────────
-// (fungsi rupiah sudah ada di auth.js, jika tidak ada tambahkan di sini)
+// ── Helper ────────────────────────────────────────────────────────────────
 function escHtml(s) {
   return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
@@ -397,21 +387,33 @@ function showToast(title, type = "info", sub = "") {
   toastTimer = setTimeout(() => { t.style.display = "none"; }, 4500);
 }
 
-// ── Update badge sidebar ──────────────────────────────────────────────────
+// ── Update badge laporan (status: terkirim = perlu verifikasi) ─────────────
 function updateBadgeLaporan(n) {
   const el = document.getElementById("badge-laporan");
   if (n > 0) { el.textContent = n; el.classList.add("show"); }
   else el.classList.remove("show");
 }
 
-async function loadBadgeNotifikasi() {
-  // Coba load notifikasi yang belum dibaca (sesuaikan endpoint)
-  const data = await apiFetch("/admin-pusat/notifikasi?belum_dibaca=1").catch(() => null);
-  if (!data?.success) return;
-  const n  = data.data?.length ?? 0;
-  const el = document.getElementById("badge-notifikasi");
+// ── Update badge notifikasi (laporan selesai, notif_terkirim = false) ──────
+function updateBadgeNotif(n) {
+  const el = document.getElementById("badge-notif");
   if (n > 0) { el.textContent = n; el.classList.add("show"); }
   else el.classList.remove("show");
+}
+
+// ── Load badge notif dari dashboard endpoint ──────────────────────────────
+// Menggunakan endpoint dashboard (sama seperti dashboard.html) untuk
+// menghitung jumlah laporan "selesai" yang belum dikirim notifikasinya.
+async function loadBadgeNotif() {
+  try {
+    const now = new Date();
+    const res = await apiFetch(`/admin-pusat/dashboard?bulan=${now.getMonth()+1}&tahun=${now.getFullYear()}`);
+    if (!res?.success) return;
+    // Hitung dari ringkasan: status selesai && notif_terkirim = false
+    const ringkasan = res.data?.ringkasan || [];
+    const n = ringkasan.filter(r => r.status_laporan === "selesai" && !r.notif_terkirim).length;
+    updateBadgeNotif(n);
+  } catch (_) {}
 }
 
 // ── Load cabang filter ────────────────────────────────────────────────────
@@ -458,9 +460,13 @@ async function loadLaporan() {
     return;
   }
 
-  // Update badge laporan (hanya yang berstatus terkirim / perlu verifikasi)
+  // ── Badge laporan: hanya yang berstatus "terkirim" (perlu verifikasi) ──
   const jmlTerkirim = data.data.filter(r => r.status === "terkirim").length;
   updateBadgeLaporan(jmlTerkirim);
+
+  // ── Badge notif: reload dari dashboard setiap kali laporan di-refresh ──
+  loadBadgeNotif();
+
   document.getElementById("info-badge").textContent =
     data.data.length > 0 ? `${data.data.length} laporan ditemukan` : "";
 
@@ -486,10 +492,6 @@ function buatKartu(r, i) {
   const badgeClass = { terkirim:"lb-terkirim",  diproses:"lb-diproses",  selesai:"lb-selesai"  }[r.status] || "lb-draft";
   const statusLabel = { terkirim:"Perlu Verifikasi", diproses:"Diproses", selesai:"Selesai" }[r.status] || r.status;
 
-  // Aksi sesuai status:
-  // terkirim  → tombol "Verifikasi & Proses"
-  // diproses  → tombol "Buat Rekap & Bayar"
-  // selesai   → label saja
   let aksiHtml = "";
   if (r.status === "terkirim") {
     aksiHtml = `<button class="btn btn-blue btn-sm" onclick="prosesLaporan(${r.id})">
@@ -596,7 +598,6 @@ async function bukaPanel(id) {
   totalGajiAktif = parseFloat(total_gaji) || 0;
   rekapDataAktif = { laporan, total_gaji };
 
-  // ── Rincian WO ─────────────────────────────────────────────────────────
   let woHtml = "";
   if (laporan.tipe_pembayaran === "per_wo") {
     woHtml = `<table class="wo-tbl">
@@ -617,7 +618,6 @@ async function bukaPanel(id) {
   const potOpts = jenisPotongan.map(j => `<option value="${j.id}">${escHtml(j.nama)}</option>`).join("");
 
   document.getElementById("dp-body").innerHTML = `
-    <!-- Info Laporan -->
     <div class="dp-section">
       <div class="dp-section-title">Informasi Laporan</div>
       <div class="dp-info-grid">
@@ -630,19 +630,16 @@ async function bukaPanel(id) {
       </div>
     </div>
 
-    <!-- Rincian WO -->
     <div class="dp-section">
       <div class="dp-section-title">Rincian WO</div>
       ${woHtml}
     </div>
 
-    <!-- Total Kotor -->
     <div class="total-box">
       <span class="tb-label">Total Gaji Kotor</span>
       <span class="tb-val">${rupiah(total_gaji)}</span>
     </div>
 
-    <!-- Potongan -->
     <div class="dp-section">
       <div class="dp-section-title">Potongan Gaji</div>
       <div id="error-rekap" class="error-msg"></div>
@@ -661,15 +658,12 @@ async function bukaPanel(id) {
       </div>
     </div>
 
-    <!-- Upload Bukti Transfer -->
     <div class="upload-section">
       <span class="upload-section-title">Bukti Transfer</span>
 
-      <!-- Tanggal transfer -->
       <input type="date" class="date-input" id="tgl-transfer"
              value="${new Date().toISOString().slice(0,10)}" placeholder="Tanggal Transfer">
 
-      <!-- Tab pilih metode -->
       <div class="upload-tabs">
         <button class="upload-tab active" id="tab-foto" onclick="gantiTabUpload('foto')">
           <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
@@ -681,10 +675,7 @@ async function bukaPanel(id) {
         </button>
       </div>
 
-      <!-- Panel: Upload Foto -->
       <div class="upload-tab-content show" id="panel-foto">
-
-        <!-- Drop zone -->
         <div class="drop-zone" id="drop-zone"
              ondragover="dzDragOver(event)" ondragleave="dzDragLeave(event)" ondrop="dzDrop(event)">
           <input type="file" id="file-input" accept="image/*" onchange="pilihanFile(this.files[0])">
@@ -697,7 +688,6 @@ async function bukaPanel(id) {
           <div class="dz-sub">atau <span>klik untuk pilih file</span> · JPG, PNG, WEBP maks. 5 MB</div>
         </div>
 
-        <!-- Preview -->
         <div class="foto-preview" id="foto-preview">
           <div class="preview-img-wrap">
             <img id="preview-img" src="" alt="Preview">
@@ -719,7 +709,6 @@ async function bukaPanel(id) {
         </div>
         <input type="file" id="file-input-ganti" accept="image/*" style="display:none" onchange="pilihanFile(this.files[0])">
 
-        <!-- Progress bar -->
         <div class="upload-progress" id="upload-progress">
           <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar"></div></div>
           <div class="progress-text">
@@ -728,14 +717,12 @@ async function bukaPanel(id) {
           </div>
         </div>
 
-        <!-- Status setelah upload -->
         <div class="upload-status" id="upload-status">
           <svg viewBox="0 0 24 24" id="upload-status-icon"></svg>
           <span id="upload-status-text"></span>
         </div>
       </div>
 
-      <!-- Panel: URL Manual -->
       <div class="upload-tab-content" id="panel-url">
         <input type="text" class="url-input" id="screenshot-url"
                placeholder="https://... URL screenshot bukti transfer">
@@ -743,7 +730,6 @@ async function bukaPanel(id) {
       </div>
     </div>`;
 
-  // Footer tombol
   document.getElementById("dp-footer").innerHTML = `
     <button class="btn" onclick="tutupPanel()">Batal</button>
     <button class="btn btn-green" id="btn-simpan-rekap" onclick="simpanRekap()">
@@ -808,24 +794,17 @@ function pilihanFile(file) {
   if (file.size > 5 * 1024 * 1024) {
     showToast("File terlalu besar", "error", "Ukuran maksimal 5 MB"); return;
   }
-
   fotoFile        = file;
   fotoUploadedUrl = null;
-
-  // Preview lokal
   const reader = new FileReader();
   reader.onload = e => { document.getElementById("preview-img").src = e.target.result; };
   reader.readAsDataURL(file);
-
   document.getElementById("preview-name").textContent = file.name;
   document.getElementById("preview-size").textContent = formatBytes(file.size);
   document.getElementById("drop-zone").style.display  = "none";
   document.getElementById("foto-preview").classList.add("show");
   document.getElementById("upload-progress").classList.remove("show");
-
-  // Reset status
-  const st = document.getElementById("upload-status");
-  st.className = "upload-status";
+  document.getElementById("upload-status").className = "upload-status";
 }
 
 function hapusFoto() {
@@ -839,7 +818,7 @@ function hapusFoto() {
   document.getElementById("upload-status").className = "upload-status";
 }
 
-// ── Upload foto ke server via /api/upload/screenshot ──────────────────────
+// ── Upload foto ───────────────────────────────────────────────────────────
 async function uploadFoto(file) {
   const prog = document.getElementById("upload-progress");
   const bar  = document.getElementById("progress-bar");
@@ -854,7 +833,6 @@ async function uploadFoto(file) {
   return new Promise((resolve, reject) => {
     const fd = new FormData();
     fd.append("screenshot", file);
-
     const xhr = new XMLHttpRequest();
 
     xhr.upload.addEventListener("progress", e => {
@@ -873,14 +851,10 @@ async function uploadFoto(file) {
             bar.style.width = "100%";
             pct.textContent = "100%";
             lbl.textContent = "Upload selesai ✓";
-
-            // Tampilkan status sukses
             const st = document.getElementById("upload-status");
-            document.getElementById("upload-status-icon").innerHTML =
-              `<polyline points="20 6 9 17 4 12"/>`;
+            document.getElementById("upload-status-icon").innerHTML = `<polyline points="20 6 9 17 4 12"/>`;
             document.getElementById("upload-status-text").textContent = `Berhasil diupload: ${res.filename}`;
             st.className = "upload-status sukses show";
-
             resolve(res.url);
           } else {
             reject(new Error(res.message || "Respons tidak valid"));
@@ -892,7 +866,6 @@ async function uploadFoto(file) {
     });
 
     xhr.addEventListener("error", () => reject(new Error("Koneksi terputus saat upload")));
-
     const token = localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token") || "";
     xhr.open("POST", "/api/upload/screenshot");
     if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
@@ -900,7 +873,7 @@ async function uploadFoto(file) {
   });
 }
 
-// ── Simpan Rekap Gaji + Kirim Notifikasi Otomatis ────────────────────────
+// ── Simpan Rekap Gaji ─────────────────────────────────────────────────────
 async function simpanRekap() {
   const errEl = document.getElementById("error-rekap");
   errEl.style.display = "none";
@@ -913,19 +886,17 @@ async function simpanRekap() {
   btn.disabled  = true;
   btn.innerHTML = `<span class="spin-sm"></span> Memproses...`;
 
-  // ── STEP 1: Upload foto jika ada ─────────────────────────────────────
+  // STEP 1: Upload foto
   if (tabAktif === "foto" && fotoFile && !fotoUploadedUrl) {
     btn.innerHTML = `<span class="spin-sm"></span> Mengupload foto...`;
     try {
       fotoUploadedUrl = await uploadFoto(fotoFile);
       screenshot_path = fotoUploadedUrl;
     } catch (err) {
-      // Tampilkan error upload
       const st = document.getElementById("upload-status");
       document.getElementById("upload-status-icon").innerHTML = `<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>`;
       document.getElementById("upload-status-text").textContent = `Upload gagal: ${err.message}`;
       st.className = "upload-status error show";
-
       btn.disabled  = false;
       btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:white;fill:none;stroke-width:2;stroke-linecap:round"><polyline points="20 6 9 17 4 12"/></svg> Simpan & Tandai Dibayar`;
       errEl.textContent   = `Gagal upload foto: ${err.message}`;
@@ -933,12 +904,12 @@ async function simpanRekap() {
       return;
     }
   } else if (tabAktif === "foto" && fotoUploadedUrl) {
-    screenshot_path = fotoUploadedUrl; // sudah diupload sebelumnya
+    screenshot_path = fotoUploadedUrl;
   } else {
     screenshot_path = (document.getElementById("screenshot-url")?.value || "").trim();
   }
 
-  // ── STEP 2: Simpan rekap gaji ─────────────────────────────────────────
+  // STEP 2: Simpan rekap
   btn.innerHTML = `<span class="spin-sm"></span> Menyimpan rekap...`;
 
   const potongan = [];
@@ -974,7 +945,7 @@ async function simpanRekap() {
     return;
   }
 
-  // ── STEP 3: Kirim notifikasi otomatis ke admin cabang ─────────────────
+  // STEP 3: Kirim notifikasi otomatis
   btn.innerHTML = `<span class="spin-sm"></span> Mengirim notifikasi...`;
 
   const laporan       = rekapDataAktif?.laporan || {};
@@ -1006,7 +977,6 @@ async function simpanRekap() {
       `Admin cabang ${escHtml(laporan.nama_cabang || "")} telah diberitahu`
     );
   } else {
-    // Rekap tetap tersimpan, notifikasi gagal → info
     showToast(
       "Rekap berhasil disimpan",
       "info",
@@ -1015,8 +985,7 @@ async function simpanRekap() {
   }
 
   tutupPanel();
-  await loadLaporan();
-  await loadBadgeNotifikasi(); // refresh badge notifikasi di sidebar
+  await loadLaporan(); // akan otomatis refresh kedua badge
 }
 
 // ── Tutup panel ───────────────────────────────────────────────────────────
@@ -1043,7 +1012,7 @@ document.getElementById("filter-status").value = "terkirim";
 Promise.all([
   loadCabang(),
   loadJenisPotongan(),
-  loadBadgeNotifikasi(),
+  loadBadgeNotif(),     // load badge notif saat init
 ]).then(() => loadLaporan());
 </script>
 </body>
