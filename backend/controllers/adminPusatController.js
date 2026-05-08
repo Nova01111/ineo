@@ -70,6 +70,9 @@ const getDashboard = async (req, res) => {
     );
 
     // ── Ringkasan laporan bulan ini — filter cabang jika dipilih ───────────
+    // Tambah notif_terkirim agar frontend bisa menentukan label Progres Pusat:
+    //   terkirim → Verifikasi | diproses → Diproses
+    //   selesai + notif 0 → Kirim Notifikasi | selesai + notif 1 → Selesai
     const [ringkasan] = await db.query(
       `SELECT
          u.nama AS nama_teknisi,
@@ -77,13 +80,15 @@ const getDashboard = async (req, res) => {
          sp.nama_sub AS sub_project,
          rg.total_gaji,
          rg.gaji_bersih,
-         rg.status AS status_pembayaran,
-         lw.status AS status_laporan
+         rg.status  AS status_pembayaran,
+         lw.status  AS status_laporan,
+         CASE WHEN ng.id IS NOT NULL THEN 1 ELSE 0 END AS notif_terkirim
        FROM laporan_wo lw
        JOIN users u        ON lw.teknisi_id     = u.id
        JOIN cabang c       ON lw.cabang_id      = c.id
        JOIN sub_project sp ON lw.sub_project_id = sp.id
-       LEFT JOIN rekap_gaji rg ON lw.id         = rg.laporan_wo_id
+       LEFT JOIN rekap_gaji rg      ON lw.id = rg.laporan_wo_id
+       LEFT JOIN notifikasi_gaji ng ON rg.id = ng.rekap_gaji_id
        WHERE lw.admin_pusat_id = ?
          AND lw.bulan = ? AND lw.tahun = ?
          ${cabang_id ? "AND lw.cabang_id = ?" : ""}

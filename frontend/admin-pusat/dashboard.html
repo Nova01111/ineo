@@ -391,25 +391,37 @@
       </div>`;
       return;
     }
+
+    // ── Helper: tentukan label & class badge Progres Pusat ─────────────────
+    // Alur: terkirim → diproses → selesai (belum notif) → selesai (sudah notif)
+    function progresBadge(r) {
+      if (r.status_laporan === "terkirim") {
+        return `<span class="badge b-terkirim">Verifikasi</span>`;
+      }
+      if (r.status_laporan === "diproses") {
+        return `<span class="badge b-diproses">Diproses</span>`;
+      }
+      if (r.status_laporan === "selesai" && !r.notif_terkirim) {
+        return `<span class="badge b-pending">Kirim Notifikasi</span>`;
+      }
+      if (r.status_laporan === "selesai" && r.notif_terkirim) {
+        return `<span class="badge b-selesai">Selesai</span>`;
+      }
+      return `<span class="badge b-draft">-</span>`;
+    }
+
     let html = `<table><thead><tr>
       <th>Teknisi</th><th>Cabang</th><th>Sub Project</th>
-      <th>Total Gaji</th><th>Gaji Bersih</th><th>Progres Pusat</th><th>Pembayaran</th>
+      <th>Total Gaji</th><th>Gaji Bersih</th><th>Progres Pusat</th>
     </tr></thead><tbody>`;
     ringkasan.forEach(r => {
-      const laporanBadge = r.status_laporan
-        ? `<span class="badge b-${r.status_laporan}">${r.status_laporan}</span>`
-        : `<span class="badge b-draft">-</span>`;
-      const bayarBadge = r.status_pembayaran
-        ? `<span class="badge b-${r.status_pembayaran}">${r.status_pembayaran}</span>`
-        : `<span class="badge b-draft">-</span>`;
       html += `<tr>
         <td><strong>${r.nama_teknisi}</strong></td>
         <td>${r.nama_cabang}</td>
         <td>${r.sub_project || "-"}</td>
         <td>${r.total_gaji  ? rupiah(r.total_gaji)  : "-"}</td>
         <td>${r.gaji_bersih ? `<strong style="color:var(--green)">${rupiah(r.gaji_bersih)}</strong>` : "-"}</td>
-        <td>${laporanBadge}</td>
-        <td>${bayarBadge}</td>
+        <td>${progresBadge(r)}</td>
       </tr>`;
     });
     html += "</tbody></table>";
