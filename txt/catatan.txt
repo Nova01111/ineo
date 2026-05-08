@@ -14,3 +14,6 @@ Kekurangan Admin Pusat
 5. Jumlah notifikasi belum muncul di halaman dashboard dan laporan masuk (DONE)
 
 Revisi Admin Cabang
+1. Sinkronisasi side
+2. Tambah fitur download untuk slip gaji dalam bentuk pdf
+3. Tambah filter di halaman dashboard
