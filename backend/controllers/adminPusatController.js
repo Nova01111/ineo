@@ -3,52 +3,73 @@ const db = require("../config/db");
 
 // ════════════════════════════════════════════════════════════════════════════
 // DASHBOARD
-// GET /api/admin-pusat/dashboard
+// GET /api/admin-pusat/dashboard?bulan=5&tahun=2026&cabang_id=3
 // ════════════════════════════════════════════════════════════════════════════
 const getDashboard = async (req, res) => {
   const { id: admin_pusat_id } = req.user;
-  const now   = new Date();
-  const bulan = parseInt(req.query.bulan) || (now.getMonth() + 1);
-  const tahun = parseInt(req.query.tahun) || now.getFullYear();
+  const now      = new Date();
+  const bulan    = parseInt(req.query.bulan)    || (now.getMonth() + 1);
+  const tahun    = parseInt(req.query.tahun)    || now.getFullYear();
+  // FIX: ambil cabang_id dari query param — jika ada, filter per cabang
+  const cabang_id = req.query.cabang_id ? parseInt(req.query.cabang_id) : null;
 
   try {
-    // Total laporan masuk (terkirim) ke admin pusat ini
+    // ── FIX 1: laporan_masuk — filter cabang jika dipilih ──────────────────
+    // Tanpa filter cabang : COUNT semua laporan terkirim milik admin pusat ini
+    // Dengan filter cabang: COUNT hanya laporan dari cabang yang dipilih
     const [[{ laporan_masuk }]] = await db.query(
-      `SELECT COUNT(*) AS laporan_masuk 
-       FROM laporan_wo 
-       WHERE admin_pusat_id = ? AND status = 'terkirim'`,
-      [admin_pusat_id]
+      `SELECT COUNT(*) AS laporan_masuk
+       FROM laporan_wo
+       WHERE admin_pusat_id = ?
+         AND status = 'terkirim'
+         ${cabang_id ? "AND cabang_id = ?" : ""}`,
+      cabang_id ? [admin_pusat_id, cabang_id] : [admin_pusat_id]
     );
 
-    // Total gaji dibayar bulan ini
+    // ── FIX 2: total_gaji_dibayar — filter cabang jika dipilih ─────────────
     const [[{ total_gaji_dibayar }]] = await db.query(
       `SELECT COALESCE(SUM(rg.gaji_bersih), 0) AS total_gaji_dibayar
        FROM rekap_gaji rg
        JOIN laporan_wo lw ON rg.laporan_wo_id = lw.id
-       WHERE rg.admin_pusat_id = ? AND lw.bulan = ? AND lw.tahun = ?
-         AND rg.status = 'dibayar'`,
-      [admin_pusat_id, bulan, tahun]
+       WHERE rg.admin_pusat_id = ?
+         AND lw.bulan = ? AND lw.tahun = ?
+         AND rg.status = 'dibayar'
+         ${cabang_id ? "AND lw.cabang_id = ?" : ""}`,
+      cabang_id
+        ? [admin_pusat_id, bulan, tahun, cabang_id]
+        : [admin_pusat_id, bulan, tahun]
     );
 
-    // Total teknisi dibayar bulan ini
+    // ── FIX 3: teknisi_dibayar — filter cabang jika dipilih ────────────────
     const [[{ teknisi_dibayar }]] = await db.query(
       `SELECT COUNT(*) AS teknisi_dibayar
        FROM rekap_gaji rg
        JOIN laporan_wo lw ON rg.laporan_wo_id = lw.id
-       WHERE rg.admin_pusat_id = ? AND lw.bulan = ? AND lw.tahun = ?
-         AND rg.status = 'dibayar'`,
-      [admin_pusat_id, bulan, tahun]
+       WHERE rg.admin_pusat_id = ?
+         AND lw.bulan = ? AND lw.tahun = ?
+         AND rg.status = 'dibayar'
+         ${cabang_id ? "AND lw.cabang_id = ?" : ""}`,
+      cabang_id
+        ? [admin_pusat_id, bulan, tahun, cabang_id]
+        : [admin_pusat_id, bulan, tahun]
     );
 
-    // Menunggu konfirmasi admin cabang
+    // ── FIX 4: menunggu_konfirmasi — filter cabang jika dipilih ────────────
+    // Perlu JOIN ke rekap_gaji → laporan_wo agar bisa filter cabang_id
     const [[{ menunggu_konfirmasi }]] = await db.query(
       `SELECT COUNT(*) AS menunggu_konfirmasi
-       FROM notifikasi_gaji
-       WHERE admin_pusat_id = ? AND is_dikonfirmasi = 0`,
-      [admin_pusat_id]
+       FROM notifikasi_gaji ng
+       ${cabang_id
+         ? `JOIN rekap_gaji rg  ON ng.rekap_gaji_id  = rg.id
+            JOIN laporan_wo lw  ON rg.laporan_wo_id  = lw.id`
+         : ""}
+       WHERE ng.admin_pusat_id = ?
+         AND ng.is_dikonfirmasi = 0
+         ${cabang_id ? "AND lw.cabang_id = ?" : ""}`,
+      cabang_id ? [admin_pusat_id, cabang_id] : [admin_pusat_id]
     );
 
-    // Ringkasan laporan bulan ini
+    // ── Ringkasan laporan bulan ini — filter cabang jika dipilih ───────────
     const [ringkasan] = await db.query(
       `SELECT
          u.nama AS nama_teknisi,
@@ -63,23 +84,28 @@ const getDashboard = async (req, res) => {
        JOIN cabang c       ON lw.cabang_id      = c.id
        JOIN sub_project sp ON lw.sub_project_id = sp.id
        LEFT JOIN rekap_gaji rg ON lw.id         = rg.laporan_wo_id
-       WHERE lw.admin_pusat_id = ? AND lw.bulan = ? AND lw.tahun = ?
+       WHERE lw.admin_pusat_id = ?
+         AND lw.bulan = ? AND lw.tahun = ?
+         ${cabang_id ? "AND lw.cabang_id = ?" : ""}
        ORDER BY u.nama`,
-      [admin_pusat_id, bulan, tahun]
+      cabang_id
+        ? [admin_pusat_id, bulan, tahun, cabang_id]
+        : [admin_pusat_id, bulan, tahun]
     );
 
-    // Status konfirmasi per cabang
+    // ── Status konfirmasi per cabang — filter cabang jika dipilih ──────────
     const [status_cabang] = await db.query(
       `SELECT
          c.nama_cabang,
-         COUNT(ng.id) AS total_notifikasi,
+         COUNT(ng.id)            AS total_notifikasi,
          SUM(ng.is_dikonfirmasi) AS sudah_konfirmasi
        FROM notifikasi_gaji ng
        JOIN users ac ON ng.admin_cabang_id = ac.id
-       JOIN cabang c ON ac.cabang_id = c.id
+       JOIN cabang c ON ac.cabang_id       = c.id
        WHERE ng.admin_pusat_id = ?
+         ${cabang_id ? "AND c.id = ?" : ""}
        GROUP BY c.id, c.nama_cabang`,
-      [admin_pusat_id]
+      cabang_id ? [admin_pusat_id, cabang_id] : [admin_pusat_id]
     );
 
     return res.json({
@@ -103,7 +129,6 @@ const getDashboard = async (req, res) => {
 // LAPORAN MASUK
 // ════════════════════════════════════════════════════════════════════════════
 
-// GET /api/admin-pusat/laporan-masuk
 const getLaporanMasuk = async (req, res) => {
   const { id: admin_pusat_id } = req.user;
   const { bulan, tahun, status, cabang_id } = req.query;
@@ -132,10 +157,10 @@ const getLaporanMasuk = async (req, res) => {
     `;
     const params = [admin_pusat_id];
 
-    if (bulan)     { query += " AND lw.bulan = ?";    params.push(bulan); }
-    if (tahun)     { query += " AND lw.tahun = ?";    params.push(tahun); }
-    if (status)    { query += " AND lw.status = ?";   params.push(status); }
-    if (cabang_id) { query += " AND lw.cabang_id = ?";params.push(cabang_id); }
+    if (bulan)     { query += " AND lw.bulan = ?";     params.push(bulan); }
+    if (tahun)     { query += " AND lw.tahun = ?";     params.push(tahun); }
+    if (status)    { query += " AND lw.status = ?";    params.push(status); }
+    if (cabang_id) { query += " AND lw.cabang_id = ?"; params.push(cabang_id); }
 
     query += " GROUP BY lw.id ORDER BY lw.tahun DESC, lw.bulan DESC";
 
@@ -147,7 +172,6 @@ const getLaporanMasuk = async (req, res) => {
   }
 };
 
-// GET /api/admin-pusat/laporan-masuk/:id
 const getLaporanMasukDetail = async (req, res) => {
   const { id: admin_pusat_id } = req.user;
   const { id } = req.params;
@@ -179,13 +203,10 @@ const getLaporanMasukDetail = async (req, res) => {
     if (!laporan)
       return res.status(404).json({ success: false, message: "Laporan tidak ditemukan" });
 
-    // Detail WO
     const [detail] = await db.query(
-      "SELECT * FROM detail_wo WHERE laporan_wo_id = ?",
-      [id]
+      "SELECT * FROM detail_wo WHERE laporan_wo_id = ?", [id]
     );
 
-    // Hitung total gaji kotor
     const [[{ total_gaji }]] = await db.query(
       "SELECT COALESCE(SUM(upah_dihitung), 0) AS total_gaji FROM detail_wo WHERE laporan_wo_id = ?",
       [id]
@@ -198,7 +219,6 @@ const getLaporanMasukDetail = async (req, res) => {
   }
 };
 
-// PATCH /api/admin-pusat/laporan-masuk/:id/proses
 const prosesLaporan = async (req, res) => {
   const { id: admin_pusat_id } = req.user;
   const { id } = req.params;
@@ -216,8 +236,7 @@ const prosesLaporan = async (req, res) => {
       return res.status(400).json({ success: false, message: "Hanya laporan berstatus terkirim yang dapat diproses" });
 
     await db.query(
-      "UPDATE laporan_wo SET status = 'diproses', update_at = NOW() WHERE id = ?",
-      [id]
+      "UPDATE laporan_wo SET status = 'diproses', update_at = NOW() WHERE id = ?", [id]
     );
 
     return res.json({ success: true, message: "Laporan berhasil diproses" });
@@ -231,7 +250,6 @@ const prosesLaporan = async (req, res) => {
 // REKAP GAJI
 // ════════════════════════════════════════════════════════════════════════════
 
-// POST /api/admin-pusat/rekap-gaji
 const createRekapGaji = async (req, res) => {
   const { id: admin_pusat_id } = req.user;
   const { laporan_wo_id, potongan, tgl_transfer, screenshot_path } = req.body;
@@ -243,7 +261,6 @@ const createRekapGaji = async (req, res) => {
   try {
     await conn.beginTransaction();
 
-    // Cek laporan ada & milik admin pusat ini
     const [[laporan]] = await conn.query(
       "SELECT * FROM laporan_wo WHERE id = ? AND admin_pusat_id = ?",
       [laporan_wo_id, admin_pusat_id]
@@ -252,20 +269,16 @@ const createRekapGaji = async (req, res) => {
     if (laporan.status !== "diproses")
       throw new Error("Laporan harus berstatus diproses sebelum dibuat rekap gaji");
 
-    // Cek rekap gaji belum ada
     const [[existing]] = await conn.query(
-      "SELECT id FROM rekap_gaji WHERE laporan_wo_id = ?",
-      [laporan_wo_id]
+      "SELECT id FROM rekap_gaji WHERE laporan_wo_id = ?", [laporan_wo_id]
     );
     if (existing) throw new Error("Rekap gaji untuk laporan ini sudah dibuat");
 
-    // Hitung total gaji dari detail_wo
     const [[{ total_gaji }]] = await conn.query(
       "SELECT COALESCE(SUM(upah_dihitung), 0) AS total_gaji FROM detail_wo WHERE laporan_wo_id = ?",
       [laporan_wo_id]
     );
 
-    // Hitung total potongan
     let total_potongan = 0;
     if (Array.isArray(potongan) && potongan.length > 0) {
       total_potongan = potongan.reduce((sum, p) => sum + (parseFloat(p.nominal) || 0), 0);
@@ -273,9 +286,8 @@ const createRekapGaji = async (req, res) => {
 
     const gaji_bersih = total_gaji - total_potongan;
 
-    // Insert rekap_gaji
     const [result] = await conn.query(
-      `INSERT INTO rekap_gaji 
+      `INSERT INTO rekap_gaji
          (laporan_wo_id, teknisi_id, admin_pusat_id, total_gaji, total_potongan, gaji_bersih, screenshot_path, tgl_transfer, status)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'dibayar')`,
       [laporan_wo_id, laporan.teknisi_id, admin_pusat_id,
@@ -284,12 +296,10 @@ const createRekapGaji = async (req, res) => {
     );
     const rekap_gaji_id = result.insertId;
 
-    // Insert detail potongan
     if (Array.isArray(potongan) && potongan.length > 0) {
       for (const p of potongan) {
         if (!p.jenis_potongan_id || !p.nominal)
           throw new Error("jenis_potongan_id dan nominal wajib diisi untuk setiap potongan");
-
         await conn.query(
           `INSERT INTO detail_potongan (rekap_gaji_id, jenis_potongan_id, keterangan, nominal)
            VALUES (?, ?, ?, ?)`,
@@ -318,7 +328,6 @@ const createRekapGaji = async (req, res) => {
   }
 };
 
-// GET /api/admin-pusat/rekap-gaji
 const getRekapGaji = async (req, res) => {
   const { id: admin_pusat_id } = req.user;
   const { bulan, tahun, cabang_id } = req.query;
@@ -358,7 +367,6 @@ const getRekapGaji = async (req, res) => {
   }
 };
 
-// GET /api/admin-pusat/rekap-gaji/:id
 const getRekapGajiDetail = async (req, res) => {
   const { id: admin_pusat_id } = req.user;
   const { id } = req.params;
@@ -384,40 +392,14 @@ const getRekapGajiDetail = async (req, res) => {
        WHERE rg.id = ? AND rg.admin_pusat_id = ?`,
       [id, admin_pusat_id]
     );
-    // const [rows] = await db.query(
-    //   `SELECT
-    //      ng.id,
-    //      ng.rekap_gaji_id, -- 🔥 TAMBAHKAN INI
-    //      ng.is_dibaca,
-    //      ng.is_dikonfirmasi,
-    //      ng.tgl_konfirmasi,
-    //      ng.created_at,
-    //      u.nama AS nama_teknisi,
-    //      ac.nama AS nama_admin_cabang,
-    //      c.nama_cabang,
-    //      rg.total_gaji,
-    //      rg.gaji_bersih,
-    //      rg.tgl_transfer
-    //    FROM notifikasi_gaji ng
-    //    JOIN users u        ON ng.teknisi_id      = u.id
-    //    JOIN users ac       ON ng.admin_cabang_id = ac.id
-    //    JOIN cabang c       ON ac.cabang_id       = c.id
-    //    JOIN rekap_gaji rg  ON ng.rekap_gaji_id   = rg.id
-    //    WHERE ng.admin_pusat_id = ?
-    //    ORDER BY ng.created_at DESC`,
-    //   [admin_pusat_id]
-    // );
 
     if (!rekap)
       return res.status(404).json({ success: false, message: "Rekap gaji tidak ditemukan" });
 
-    // Detail WO
     const [detail_wo] = await db.query(
-      "SELECT * FROM detail_wo WHERE laporan_wo_id = ?",
-      [rekap.laporan_wo_id]
+      "SELECT * FROM detail_wo WHERE laporan_wo_id = ?", [rekap.laporan_wo_id]
     );
 
-    // Detail potongan
     const [detail_potongan] = await db.query(
       `SELECT dp.*, jp.nama AS nama_jenis_potongan
        FROM detail_potongan dp
@@ -437,7 +419,6 @@ const getRekapGajiDetail = async (req, res) => {
 // NOTIFIKASI
 // ════════════════════════════════════════════════════════════════════════════
 
-// POST /api/admin-pusat/notifikasi
 const kirimNotifikasi = async (req, res) => {
   const { id: admin_pusat_id } = req.user;
   const { rekap_gaji_id } = req.body;
@@ -446,7 +427,6 @@ const kirimNotifikasi = async (req, res) => {
     return res.status(400).json({ success: false, message: "rekap_gaji_id wajib diisi" });
 
   try {
-    // Cek rekap gaji
     const [[rekap]] = await db.query(
       `SELECT rg.*, lw.teknisi_id, lw.admin_cabang_id
        FROM rekap_gaji rg
@@ -460,18 +440,14 @@ const kirimNotifikasi = async (req, res) => {
     if (rekap.status !== "dibayar")
       return res.status(400).json({ success: false, message: "Rekap gaji harus berstatus dibayar" });
 
-    // Cek notifikasi belum pernah dikirim
     const [[existing]] = await db.query(
-      "SELECT id FROM notifikasi_gaji WHERE rekap_gaji_id = ?",
-      [rekap_gaji_id]
+      "SELECT id FROM notifikasi_gaji WHERE rekap_gaji_id = ?", [rekap_gaji_id]
     );
     if (existing)
       return res.status(400).json({ success: false, message: "Notifikasi untuk rekap gaji ini sudah pernah dikirim" });
 
-    // Insert notifikasi
     await db.query(
-      `INSERT INTO notifikasi_gaji 
-         (rekap_gaji_id, admin_pusat_id, admin_cabang_id, teknisi_id)
+      `INSERT INTO notifikasi_gaji (rekap_gaji_id, admin_pusat_id, admin_cabang_id, teknisi_id)
        VALUES (?, ?, ?, ?)`,
       [rekap_gaji_id, admin_pusat_id, rekap.admin_cabang_id, rekap.teknisi_id]
     );
@@ -483,27 +459,19 @@ const kirimNotifikasi = async (req, res) => {
   }
 };
 
-// GET /api/admin-pusat/notifikasi
 const getNotifikasi = async (req, res) => {
   const { id: admin_pusat_id } = req.user;
 
   try {
     const [rows] = await db.query(
       `SELECT
-         ng.id,
-         ng.rekap_gaji_id,
-         ng.is_dibaca,
-         ng.is_dikonfirmasi,
-         ng.tgl_konfirmasi,
-         ng.created_at,
+         ng.id, ng.rekap_gaji_id,
+         ng.is_dibaca, ng.is_dikonfirmasi, ng.tgl_konfirmasi, ng.created_at,
          u.nama  AS nama_teknisi,
          ac.nama AS nama_admin_cabang,
          c.nama_cabang,
-         rg.total_gaji,
-         rg.gaji_bersih,
-         rg.tgl_transfer,
-         lw.bulan,
-         lw.tahun
+         rg.total_gaji, rg.gaji_bersih, rg.tgl_transfer,
+         lw.bulan, lw.tahun
        FROM notifikasi_gaji ng
        JOIN users u        ON ng.teknisi_id      = u.id
        JOIN users ac       ON ng.admin_cabang_id = ac.id
@@ -525,7 +493,6 @@ const getNotifikasi = async (req, res) => {
 // MASTER DATA
 // ════════════════════════════════════════════════════════════════════════════
 
-// GET /api/admin-pusat/master/jenis-potongan
 const getJenisPotongan = async (req, res) => {
   try {
     const [rows] = await db.query(
@@ -538,7 +505,6 @@ const getJenisPotongan = async (req, res) => {
   }
 };
 
-// GET /api/admin-pusat/master/cabang
 const getCabang = async (req, res) => {
   try {
     const [rows] = await db.query(
