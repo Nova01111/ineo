@@ -410,10 +410,28 @@
   })();
 
   // ── Load admin pusat (untuk dropdown kirim) ────────────────────────────
+  // Jadi ini:
   async function loadAdminPusat() {
     const data = await apiFetch("/admin-cabang/master/admin-pusat");
     if (data?.success) {
       adminPusatList = data.data;
+    }
+  }
+
+  async function loadNotifBadge() {
+    const now   = new Date();
+    const bulan = now.getMonth() + 1;
+    const tahun = now.getFullYear();
+    const data  = await apiFetch(`/admin-cabang/dashboard?bulan=${bulan}&tahun=${tahun}`);
+    if (!data?.success) return;
+
+    const jumlah = data.data.perlu_konfirmasi ?? 0;
+    const badge  = document.getElementById("badge-notif");
+    if (jumlah > 0) {
+      badge.textContent = jumlah;
+      badge.classList.add("show");
+    } else {
+      badge.classList.remove("show");
     }
   }
 
@@ -737,7 +755,8 @@
   }
 
   // ── Init ──────────────────────────────────────────────────────────────
-  Promise.all([loadAdminPusat(), loadLaporan()]);
+  // Jadi ini:
+  Promise.all([loadAdminPusat(), loadLaporan(), loadNotifBadge()]);;
 </script>
 </body>
 </html>

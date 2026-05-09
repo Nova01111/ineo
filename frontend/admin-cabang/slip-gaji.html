@@ -48,6 +48,9 @@
     .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 1.375rem; font-size: 13px; color: rgba(255,255,255,0.5); text-decoration: none; border-left: 2px solid transparent; transition: background .15s, color .15s; }
     .nav-item:hover { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.85); }
     .nav-item.active { color: #fff; background: rgba(59,158,255,0.12); border-left-color: var(--blue-acc); font-weight: 500; }
+    /* Tambahkan setelah .nav-item.active .nav-icon { opacity: 1; } */
+    .nav-badge { margin-left: auto; background: var(--red); color: white; font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 99px; display: none; }
+    .nav-badge.show { display: inline-block; }
     .nav-item .nav-icon { width: 16px; height: 16px; flex-shrink: 0; opacity: .7; }
     .nav-item.active .nav-icon { opacity: 1; }
     .user-box { margin-top: auto; padding: 1rem 1.375rem; border-top: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; gap: 10px; }
@@ -208,9 +211,11 @@
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
       Input Laporan
     </a>
+    <!-- Jadi ini: -->
     <a class="nav-item" href="/admin-cabang/notifikasi.html">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       Notifikasi
+      <span class="nav-badge" id="badge-notif">0</span>
     </a>
     <a class="nav-item active" href="/admin-cabang/slip-gaji.html">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
@@ -501,7 +506,27 @@
     if (e.key === "Escape") tutupSS({ target: document.getElementById("ss-overlay") });
   });
 
-  loadTeknisi();
+  // Tambahkan fungsi ini:
+  async function loadNotifBadge() {
+    const now   = new Date();
+    const bulan = now.getMonth() + 1;
+    const tahun = now.getFullYear();
+    const data  = await apiFetch(`/admin-cabang/dashboard?bulan=${bulan}&tahun=${tahun}`);
+    if (!data?.success) return;
+
+    const jumlah = data.data.perlu_konfirmasi ?? 0;
+    const badge  = document.getElementById("badge-notif");
+    if (jumlah > 0) {
+      badge.textContent = jumlah;
+      badge.classList.add("show");
+    } else {
+      badge.classList.remove("show");
+    }
+  }
+
+
+// Jadi ini:
+  Promise.all([loadTeknisi(), loadNotifBadge()]);
 </script>
 </body>
 </html>
