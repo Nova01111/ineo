@@ -185,6 +185,30 @@
 
     @keyframes spin    { to { transform: rotate(360deg); } }
     @keyframes fadeUp  { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── Print / Unduh PDF ── */
+    @media print {
+      .sidebar, .topbar, .panel-left, .filter-bar, .btn-unduh, .toast, .ss-overlay { display: none !important; }
+      body { background: white; }
+      .main { margin-left: 0; }
+      .content { display: block; padding: 0; }
+      .panel-right { gap: 0; }
+      .slip-card { break-inside: avoid; border: 1px solid #e2e8f0; margin-bottom: 1.5rem; border-radius: 8px; box-shadow: none; animation: none; }
+      .slip-hdr { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .slip-summary { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .sum-bersih  { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .gaji-tetap-box { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      #print-header { display: block !important; }
+    }
+
+    #print-header {
+      display: none;
+      padding: 0 0 1.25rem 0;
+      border-bottom: 2px solid #0f1f38;
+      margin-bottom: 1.5rem;
+    }
+    #print-header h1 { font-size: 18px; font-weight: 700; color: #0f1f38; }
+    #print-header p  { font-size: 12px; color: #64748b; margin-top: 3px; }
   </style>
 </head>
 <body>
@@ -252,6 +276,10 @@
 
     <!-- Panel Kanan -->
     <div class="panel-right">
+      <div id="print-header">
+        <h1>Slip Gaji Teknisi</h1>
+        <p id="print-meta">—</p>
+      </div>      
       <!-- Filter -->
       <div class="filter-bar">
         <span class="filter-label">Periode:</span>
@@ -265,6 +293,10 @@
         <input type="number" id="filter-tahun" value="2026" min="2020" max="2099" style="width:78px">
         <button class="btn btn-blue" onclick="loadSlip()">Tampilkan</button>
         <span class="selected-label" id="selected-label">— Belum ada teknisi dipilih —</span>
+        <button class="btn btn-blue btn-unduh" id="btn-unduh" onclick="unduhPDF()" style="display:none">
+          <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Unduh PDF
+        </button>
       </div>
 
       <!-- Area Slip -->
@@ -356,6 +388,7 @@
     const q = qs.length ? "?" + qs.join("&") : "";
 
     document.getElementById("slip-area").innerHTML =
+      document.getElementById("btn-unduh").style.display = "inline-flex";
       '<div class="state-box"><div class="spinner-wrap"><div class="spinner"></div></div></div>';
 
     const data = await apiFetch(`/admin-cabang/slip-gaji/${teknisiDipilih.id}${q}`);
@@ -367,6 +400,7 @@
           <div class="state-title">Gagal memuat data</div>
           <div class="state-sub">Periksa koneksi dan coba lagi</div>
         </div>`;
+      document.getElementById("btn-unduh").style.display = "none";
       return;
     }
 
@@ -377,6 +411,7 @@
           <div class="state-title">Belum ada slip gaji</div>
           <div class="state-sub">Tidak ada data gaji untuk ${escHtml(teknisiDipilih.nama)} pada periode ini</div>
         </div>`;
+        document.getElementById("btn-unduh").style.display = "none";
       return;
     }
 
@@ -505,6 +540,17 @@
   document.addEventListener("keydown", e => {
     if (e.key === "Escape") tutupSS({ target: document.getElementById("ss-overlay") });
   });
+
+  // ── Unduh PDF via print dialog ────────────────────────────────────────
+  function unduhPDF() {
+    const bulan = document.getElementById("filter-bulan").value;
+    const tahun = document.getElementById("filter-tahun").value;
+    const BLN_LIST = ["","Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+    const periode  = bulan ? `${BLN_LIST[bulan]} ${tahun}` : `Tahun ${tahun}`;
+    document.getElementById("print-meta").textContent =
+      `${teknisiDipilih?.nama ?? ""} · Periode: ${periode} · Dicetak: ${new Date().toLocaleDateString("id-ID", {day:"numeric",month:"long",year:"numeric"})}`;
+    window.print();
+  }
 
   // Tambahkan fungsi ini:
   async function loadNotifBadge() {
