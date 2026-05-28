@@ -22,6 +22,7 @@ app.use("/api/admin-cabang", require("./routes/adminCabang"));
 app.use("/api/admin-pusat",  require("./routes/adminPusat"));
 app.use("/api/teknisi",      require("./routes/teknisi"));
 app.use("/api/upload",       require("./routes/upload"));
+app.use("/api/operator", require("./routes/operator"));
 
 // ── Health check API ──────────────────────────────────────────────────────
 // Dipindah ke /api/health agar tidak bentrok dengan route "/" frontend
