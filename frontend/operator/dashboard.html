@@ -372,6 +372,8 @@
   // ── Load dashboard ────────────────────────────────────────────────────
   async function loadDashboard() {
     const data = await apiFetch("/operator/dashboard");
+    console.log("Response API:", data);          // ← tambahkan ini
+    console.log("teknisi_terbaru:", data?.data?.teknisi_terbaru);
 
     if (!data?.success) {
       document.getElementById("greeting-sub").textContent = "Gagal memuat data sistem.";
@@ -396,6 +398,7 @@
 
   // ── Render tabel teknisi terbaru ──────────────────────────────────────
   function renderTabel(rows) {
+    console.log("Data teknisi:", rows);
     const cont = document.getElementById("tbl-teknisi");
 
     if (rows.length === 0) {
@@ -422,9 +425,12 @@
           </tr>
         </thead>
         <tbody>`;
+    console.log("Nilai is_active teknisi pertama:", rows[0]?.is_active, typeof rows[0]?.is_active);
 
     rows.forEach(t => {
-      const badge = t.is_active
+      // SESUDAH
+      const isAktif = t.is_active === true || t.is_active === 1 || t.is_active === "1" || t.is_active === "true";
+      const badge = isAktif
         ? `<span class="badge b-active">Aktif</span>`
         : `<span class="badge b-inactive">Nonaktif</span>`;
 

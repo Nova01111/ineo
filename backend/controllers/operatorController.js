@@ -33,7 +33,7 @@ const getDashboard = async (req, res) => {
 
     // Teknisi terbaru (5 terakhir ditambahkan)
     const [teknisi_terbaru] = await db.query(
-      `SELECT u.id, u.nama, u.email, c.nama_cabang, u.created_at
+      `SELECT u.id, u.nama, u.email, u.is_active, c.nama_cabang, u.created_at
        FROM users u
        LEFT JOIN cabang c ON u.cabang_id = c.id
        WHERE u.role = 'teknisi'
