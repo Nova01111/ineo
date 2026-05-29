@@ -370,6 +370,7 @@
     `${sapaan}, ${getNama() || "Operator"} 👋`;
 
   // ── Load dashboard ────────────────────────────────────────────────────
+
   async function loadDashboard() {
     const data = await apiFetch("/operator/dashboard");
     console.log("Response API:", data);          // ← tambahkan ini
@@ -478,6 +479,11 @@
   }
 
   // ── Init ──────────────────────────────────────────────────────────────
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      loadDashboard();
+    }
+  });
   loadDashboard();
 </script>
 </body>

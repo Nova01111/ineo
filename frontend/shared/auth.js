@@ -39,7 +39,7 @@ async function apiFetch(endpoint, options = {}) {
     ...(options.headers || {}),
   };
   try {
-    const res  = await fetch(`/api${endpoint}`, { ...options, headers });
+    const res  = await fetch(`/api${endpoint}`, { ...options, headers, cache: "no-store" });
     const data = await res.json();
     // Token expired / tidak valid → redirect login
     if (res.status === 401 || res.status === 403) {
