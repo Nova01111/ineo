@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manajemen Cabang — Operator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #f4f6fa;
+      --white:     #ffffff;
+      --navy:      #0f1f38;
+      --blue:      #185FA5;
+      --blue-lt:   #eff6ff;
+      --blue-acc:  #3b9eff;
+      --text:      #1e293b;
+      --text-2:    #64748b;
+      --text-3:    #94a3b8;
+      --border:    #e2e8f0;
+      --border-2:  #f1f5f9;
+      --green:     #16a34a;
+      --green-lt:  #f0fdf4;
+      --amber:     #b45309;
+      --amber-lt:  #fffbeb;
+      --red:       #dc2626;
+      --red-lt:    #fef2f2;
+      --red-bdr:   #fecaca;
+      --sidebar-w: 232px;
+      --topbar-h:  56px;
+      --radius:    10px;
+    }
+
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+
+    /* ═══════ SIDEBAR ═══════ */
+    .sidebar { width: var(--sidebar-w); background: var(--navy); display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 50; }
+    .sidebar-logo { padding: 1.375rem 1.375rem 1.125rem; border-bottom: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; gap: 10px; }
+    .logo-icon { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, var(--blue), var(--blue-acc)); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .logo-icon svg { width: 17px; height: 17px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .logo-text h2 { font-size: 13.5px; font-weight: 600; color: #fff; }
+    .logo-text p  { font-size: 10.5px; color: rgba(255,255,255,0.4); margin-top: 1px; }
+    .nav-section  { padding: 1.125rem 0 .375rem; overflow-y: auto; flex: 1; }
+    .nav-label { font-size: 9.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,0.25); padding: 0 1.375rem; margin-bottom: .375rem; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 1.375rem; font-size: 13px; color: rgba(255,255,255,0.5); text-decoration: none; border-left: 2px solid transparent; transition: background .15s, color .15s; }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.85); }
+    .nav-item.active { color: #fff; background: rgba(59,158,255,0.12); border-left-color: var(--blue-acc); font-weight: 500; }
+    .nav-item .nav-icon { width: 16px; height: 16px; flex-shrink: 0; opacity: .7; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .nav-item.active .nav-icon { opacity: 1; }
+    .user-box { padding: 1rem 1.375rem; border-top: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; gap: 10px; }
+    .avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--blue), var(--blue-acc)); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: white; flex-shrink: 0; }
+    .user-name { font-size: 13px; font-weight: 500; color: #fff; }
+    .user-role { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 1px; }
+    .btn-logout { margin-top: 4px; font-size: 11px; color: rgba(255,100,100,0.7); cursor: pointer; background: none; border: none; padding: 0; font-family: 'DM Sans', sans-serif; transition: color .15s; }
+    .btn-logout:hover { color: #f87171; }
+
+    /* ═══════ MAIN ═══════ */
+    .main { flex: 1; margin-left: var(--sidebar-w); display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar { background: var(--white); border-bottom: 1px solid var(--border); height: var(--topbar-h); padding: 0 1.75rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; }
+    .topbar-title { font-size: 15px; font-weight: 600; color: var(--text); }
+
+    /* ═══════ CONTENT ═══════ */
+    .content { padding: 1.75rem; flex: 1; display: grid; grid-template-columns: 1fr 340px; gap: 1.25rem; align-items: start; }
+
+    /* ── Filter bar ── */
+    .filter-bar { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: .875rem 1.25rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 1.25rem; animation: fadeUp .3s ease both; }
+    .filter-bar label { font-size: 11.5px; font-weight: 500; color: var(--text-2); }
+    .filter-bar select, .filter-bar input { font-family: 'DM Sans', sans-serif; font-size: 12.5px; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 7px; padding: 6px 10px; outline: none; transition: border-color .15s; }
+    .filter-bar select:focus, .filter-bar input:focus { border-color: var(--blue-acc); }
+    .filter-sep { width: 1px; height: 20px; background: var(--border); margin: 0 2px; }
+    .ml-auto { margin-left: auto; }
+
+    /* ── Buttons ── */
+    .btn { display: inline-flex; align-items: center; gap: 6px; font-family: 'DM Sans', sans-serif; font-size: 12.5px; font-weight: 500; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--white); color: var(--text); cursor: pointer; text-decoration: none; transition: background .15s; white-space: nowrap; }
+    .btn:hover { background: var(--bg); }
+    .btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .btn-primary { background: var(--blue); color: white; border-color: var(--blue); }
+    .btn-primary:hover { background: #0f4d8a; }
+    .btn-success { background: var(--green); color: white; border-color: var(--green); }
+    .btn-success:hover { background: #15803d; }
+    .btn-danger  { color: var(--red); border-color: var(--red-bdr); }
+    .btn-danger:hover { background: var(--red-lt); }
+    .btn-sm { font-size: 11.5px; padding: 5px 11px; }
+
+    /* ── Card ── */
+    .card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; animation: fadeUp .35s .05s ease both; }
+    .card-hdr { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-2); }
+    .card-title { font-size: 13.5px; font-weight: 600; }
+    .card-count { font-size: 12px; color: var(--text-3); font-family: 'DM Mono', monospace; }
+
+    /* ── Table ── */
+    .tbl-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    thead th { text-align: left; padding: 9px 14px; font-size: 11px; font-weight: 600; color: var(--text-3); letter-spacing: .04em; text-transform: uppercase; background: var(--bg); border-bottom: 1px solid var(--border); white-space: nowrap; }
+    tbody td { padding: 11px 14px; border-bottom: 1px solid var(--border-2); color: var(--text); vertical-align: middle; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr { transition: background .1s; cursor: pointer; }
+    tbody tr:hover td { background: #f8fafc; }
+    tbody tr.selected td { background: var(--blue-lt); }
+    .td-mono { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-2); }
+    .td-bold { font-weight: 500; }
+
+    /* ── Badge ── */
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 6px; font-size: 10.5px; font-weight: 600; white-space: nowrap; }
+    .badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .6; }
+    .b-active   { background: var(--green-lt); color: var(--green); }
+    .b-inactive { background: var(--border-2); color: var(--text-3); }
+
+    /* ── State ── */
+    .state-box { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3.5rem 1rem; gap: 10px; text-align: center; }
+    .state-box svg { width: 38px; height: 38px; stroke: var(--text-3); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .state-title { font-size: 14px; font-weight: 600; color: var(--text-2); }
+    .state-sub   { font-size: 13px; color: var(--text-3); }
+    .spinner-wrap { display: flex; align-items: center; justify-content: center; padding: 3.5rem; }
+    .spinner { width: 28px; height: 28px; border: 2.5px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin .7s linear infinite; }
+
+    /* ═══════ PANEL DETAIL ═══════ */
+    .panel-detail { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); position: sticky; top: calc(var(--topbar-h) + 1.75rem); display: none; }
+    .panel-detail.show { display: block; }
+    .pd-hdr { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-2); }
+    .pd-hdr-title { font-size: 13px; font-weight: 600; }
+    .pd-close { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border); background: var(--white); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .pd-close:hover { background: var(--bg); }
+    .pd-close svg { width: 13px; height: 13px; stroke: var(--text-2); fill: none; stroke-width: 2; stroke-linecap: round; }
+    .pd-body { padding: 1.25rem; }
+
+    /* Cabang icon header */
+    .pd-cabang-hdr { display: flex; align-items: center; gap: 12px; margin-bottom: 1.25rem; }
+    .pd-cabang-icon { width: 46px; height: 46px; border-radius: 12px; background: linear-gradient(135deg, var(--navy), #1a3a6e); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .pd-cabang-icon svg { width: 20px; height: 20px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .pd-cabang-nama { font-size: 15px; font-weight: 600; color: var(--text); }
+    .pd-cabang-wilayah { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+
+    .pd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem 1rem; margin-bottom: 1.25rem; }
+    .pd-item label { font-size: 10.5px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: .04em; display: block; margin-bottom: 3px; }
+    .pd-item span  { font-size: 13px; color: var(--text); font-weight: 500; }
+    .pd-item.full  { grid-column: 1 / -1; }
+
+    /* Admin cabang list */
+    .admin-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1.25rem; }
+    .admin-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--bg); border-radius: 8px; border: 1px solid var(--border-2); }
+    .admin-ava  { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--blue), var(--blue-acc)); color: white; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .admin-nama { font-size: 12.5px; font-weight: 500; color: var(--text); }
+    .admin-email { font-size: 11px; color: var(--text-3); font-family: 'DM Mono', monospace; }
+    .pd-section-label { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-3); margin-bottom: .625rem; }
+
+    .pd-actions { display: flex; flex-direction: column; gap: 8px; padding-top: 1rem; border-top: 1px solid var(--border-2); }
+
+    /* ── Modal ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(15,31,56,0.55); backdrop-filter: blur(4px); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 1rem; opacity: 0; pointer-events: none; transition: opacity .2s; }
+    .modal-overlay.show { opacity: 1; pointer-events: all; }
+    .modal { background: var(--white); border-radius: 14px; width: 100%; max-width: 460px; max-height: 88vh; overflow-y: auto; transform: translateY(20px); transition: transform .25s cubic-bezier(.16,1,.3,1); box-shadow: 0 24px 64px rgba(15,31,56,0.2); }
+    .modal-overlay.show .modal { transform: translateY(0); }
+    .modal-hdr { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-2); position: sticky; top: 0; background: var(--white); z-index: 1; }
+    .modal-title { font-size: 15px; font-weight: 600; }
+    .modal-close { width: 30px; height: 30px; border-radius: 7px; border: 1px solid var(--border); background: var(--white); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .modal-close:hover { background: var(--bg); }
+    .modal-close svg { width: 14px; height: 14px; stroke: var(--text-2); fill: none; stroke-width: 2; stroke-linecap: round; }
+    .modal-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+    .modal-ftr  { padding: 1rem 1.5rem; border-top: 1px solid var(--border-2); display: flex; justify-content: flex-end; gap: 8px; }
+
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group label { font-size: 12px; font-weight: 500; color: var(--text-2); }
+    .form-group input { font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text); background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 8px 11px; outline: none; transition: border-color .15s; width: 100%; }
+    .form-group input:focus { border-color: var(--blue-acc); }
+
+    /* ── Confirm ── */
+    .confirm-overlay { position: fixed; inset: 0; background: rgba(15,31,56,0.55); backdrop-filter: blur(4px); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 1rem; opacity: 0; pointer-events: none; transition: opacity .2s; }
+    .confirm-overlay.show { opacity: 1; pointer-events: all; }
+    .confirm-box { background: var(--white); border-radius: 14px; padding: 1.75rem; width: 100%; max-width: 380px; transform: scale(.95); transition: transform .2s cubic-bezier(.16,1,.3,1); box-shadow: 0 24px 64px rgba(15,31,56,0.2); }
+    .confirm-overlay.show .confirm-box { transform: scale(1); }
+    .confirm-icon { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; }
+    .confirm-icon svg { width: 20px; height: 20px; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .confirm-icon.red   { background: var(--red-lt);   } .confirm-icon.red svg   { stroke: var(--red); }
+    .confirm-icon.amber { background: var(--amber-lt); } .confirm-icon.amber svg { stroke: var(--amber); }
+    .confirm-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+    .confirm-desc  { font-size: 13px; color: var(--text-2); line-height: 1.6; margin-bottom: 1.25rem; }
+    .confirm-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+    /* ── Toast ── */
+    .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--navy); color: white; padding: 10px 16px; border-radius: 9px; font-size: 13px; display: none; z-index: 999; max-width: 320px; animation: fadeUp .25s ease; }
+
+    @keyframes spin   { to { transform: rotate(360deg); } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+
+<!-- ═══════ SIDEBAR ═══════ -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
+    </div>
+    <div class="logo-text"><h2>Rekap Gaji</h2><p>Operator</p></div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Menu Utama</div>
+    <a class="nav-item" href="/operator/dashboard.html">
+      <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </a>
+    <div class="nav-label" style="margin-top:.75rem">Master Data</div>
+    <a class="nav-item" href="/operator/teknisi.html">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Teknisi
+    </a>
+    <a class="nav-item" href="/operator/pengguna.html">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Pengguna
+    </a>
+    <a class="nav-item active" href="/operator/cabang.html">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Cabang
+    </a>
+    <a class="nav-item" href="/operator/provider.html">
+      <svg class="nav-icon" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+      Provider
+    </a>
+    <a class="nav-item" href="/operator/potongan.html">
+      <svg class="nav-icon" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Jenis Potongan
+    </a>
+    <div class="nav-label" style="margin-top:.75rem">Monitor</div>
+    <a class="nav-item" href="/operator/monitor-laporan.html">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Monitor Laporan
+    </a>
+    <a class="nav-item" href="/operator/monitor-gaji.html">
+      <svg class="nav-icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      Monitor Gaji
+    </a>
+    <a class="nav-item" href="/operator/log-aktivitas.html">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="9" x2="10" y2="9"/></svg>
+      Log Aktivitas
+    </a>
+  </div>
+  <div class="user-box">
+    <div class="avatar" id="user-avatar">?</div>
+    <div>
+      <div class="user-name" id="user-nama">-</div>
+      <div class="user-role">Operator</div>
+      <button class="btn-logout" onclick="logout()">Keluar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ MAIN ═══════ -->
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-title">Manajemen Cabang</span>
+    <button class="btn btn-primary btn-sm" onclick="bukaModal()">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      Tambah Cabang
+    </button>
+  </div>
+
+  <div class="content">
+
+    <!-- Kolom Kiri -->
+    <div>
+      <div class="filter-bar">
+        <label>Status</label>
+        <select id="f-status">
+          <option value="">Semua</option>
+          <option value="1">Aktif</option>
+          <option value="0">Nonaktif</option>
+        </select>
+        <div class="filter-sep"></div>
+        <input type="text" id="f-search" placeholder="Cari nama cabang..." style="width:200px">
+        <button class="btn btn-sm" onclick="loadCabang()">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Cari
+        </button>
+        <button class="btn btn-sm ml-auto" onclick="resetFilter()">
+          <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.49"/></svg>
+          Reset
+        </button>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr">
+          <span class="card-title">Daftar Cabang</span>
+          <span class="card-count" id="jumlah-cabang">—</span>
+        </div>
+        <div id="tbl-cabang">
+          <div class="spinner-wrap"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel Detail -->
+    <div class="panel-detail" id="panel-detail">
+      <div class="pd-hdr">
+        <span class="pd-hdr-title">Detail Cabang</span>
+        <button class="pd-close" onclick="tutupPanel()">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="pd-body" id="pd-body"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════ MODAL TAMBAH / EDIT ═══════ -->
+<div class="modal-overlay" id="modal-overlay" onclick="tutupModalOuter(event)">
+  <div class="modal">
+    <div class="modal-hdr">
+      <span class="modal-title" id="modal-title">Tambah Cabang</span>
+      <button class="modal-close" onclick="tutupModal()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-id">
+      <div class="form-group">
+        <label>Nama Cabang <span style="color:var(--red)">*</span></label>
+        <input type="text" id="f-nama" placeholder="Contoh: Cabang Semarang">
+      </div>
+      <div class="form-group">
+        <label>Wilayah</label>
+        <input type="text" id="f-wilayah" placeholder="Contoh: Jawa Tengah">
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-sm" onclick="tutupModal()">Batal</button>
+      <button class="btn btn-primary btn-sm" id="btn-simpan" onclick="simpanCabang()">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        Simpan
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Konfirmasi toggle -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-icon amber" id="confirm-icon">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </div>
+    <div class="confirm-title" id="confirm-title">Konfirmasi</div>
+    <div class="confirm-desc"  id="confirm-desc">—</div>
+    <div class="confirm-actions">
+      <button class="btn btn-sm" onclick="tutupConfirm()">Batal</button>
+      <button class="btn btn-sm" id="btn-confirm-ok">Ya, Lanjutkan</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/shared/auth.js"></script>
+<script>
+  if (!requireAuth("operator")) throw new Error("Unauthorized");
+  initUserInfo();
+
+  let semuaCabang = [];
+  let selectedId  = null;
+  let modeEdit    = false;
+
+  // ── Reset filter ──────────────────────────────────────────────────────
+  function resetFilter() {
+    document.getElementById("f-status").value = "";
+    document.getElementById("f-search").value = "";
+    loadCabang();
+  }
+
+  // ── Load cabang ───────────────────────────────────────────────────────
+  async function loadCabang() {
+    document.getElementById("tbl-cabang").innerHTML =
+      '<div class="spinner-wrap"><div class="spinner"></div></div>';
+    document.getElementById("jumlah-cabang").textContent = "—";
+    tutupPanel();
+
+    const status = document.getElementById("f-status").value;
+    const search = document.getElementById("f-search").value.trim();
+    const qs = new URLSearchParams();
+    if (status !== "") qs.set("is_active", status);
+    if (search) qs.set("search", search);
+
+    const data = await apiFetch(`/operator/cabang${qs.toString() ? "?" + qs : ""}`);
+    if (!data?.success) { renderError("Tidak dapat terhubung ke server."); return; }
+
+    semuaCabang = data.data;
+    renderTabel(semuaCabang);
+  }
+
+  function renderTabel(rows) {
+    document.getElementById("jumlah-cabang").textContent = `${rows.length} cabang`;
+    const cont = document.getElementById("tbl-cabang");
+
+    if (rows.length === 0) {
+      cont.innerHTML = `
+        <div class="state-box">
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <div class="state-title">Tidak ada cabang</div>
+          <div class="state-sub">Tambahkan cabang baru untuk memulai.</div>
+          <button class="btn btn-primary btn-sm" onclick="bukaModal()" style="margin-top:6px">Tambah Cabang</button>
+        </div>`;
+      return;
+    }
+
+    let html = `<div class="tbl-wrap"><table>
+      <thead><tr>
+        <th>Nama Cabang</th><th>Wilayah</th><th>Admin Cabang</th><th>Status</th><th>Terdaftar</th>
+      </tr></thead><tbody>`;
+
+    rows.forEach(c => {
+      const badge = c.is_active
+        ? `<span class="badge b-active">Aktif</span>`
+        : `<span class="badge b-inactive">Nonaktif</span>`;
+      const sel = selectedId === c.id ? " selected" : "";
+
+      html += `
+        <tr class="${sel}" onclick="bukaPanel(${c.id})">
+          <td class="td-bold">${escHtml(c.nama_cabang)}</td>
+          <td>${escHtml(c.wilayah || "—")}</td>
+          <td>${escHtml(c.nama_admin_cabang || "—")}</td>
+          <td>${badge}</td>
+          <td class="td-mono">${tglFormat(c.created_at)}</td>
+        </tr>`;
+    });
+
+    html += `</tbody></table></div>`;
+    cont.innerHTML = html;
+  }
+
+  function renderError(msg) {
+    document.getElementById("tbl-cabang").innerHTML = `
+      <div class="state-box">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div class="state-title">Gagal memuat data</div>
+        <div class="state-sub">${escHtml(msg)}</div>
+        <button class="btn btn-sm" onclick="loadCabang()" style="margin-top:6px">Coba Lagi</button>
+      </div>`;
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // PANEL DETAIL
+  // ═══════════════════════════════════════════════════════
+  function bukaPanel(id) {
+    selectedId = id;
+    document.querySelectorAll("tbody tr").forEach(tr => tr.classList.remove("selected"));
+    event.currentTarget.classList.add("selected");
+    document.getElementById("panel-detail").classList.add("show");
+
+    const c = semuaCabang.find(x => x.id === id);
+    if (!c) return;
+
+    const badge        = c.is_active
+      ? `<span class="badge b-active">Aktif</span>`
+      : `<span class="badge b-inactive">Nonaktif</span>`;
+    const toggleClass  = c.is_active ? "btn-danger"  : "btn-success";
+    const toggleLabel  = c.is_active ? "Nonaktifkan Cabang" : "Aktifkan Cabang";
+    const toggleIcon   = c.is_active
+      ? `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`
+      : `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`;
+
+    const adminHtml = c.nama_admin_cabang
+      ? `<div class="admin-item">
+           <div class="admin-ava">${escHtml(c.nama_admin_cabang.substring(0,2).toUpperCase())}</div>
+           <div>
+             <div class="admin-nama">${escHtml(c.nama_admin_cabang)}</div>
+             <div class="admin-email">Admin Cabang</div>
+           </div>
+         </div>`
+      : `<div style="font-size:12.5px;color:var(--text-3);padding:6px 0">Belum ada admin cabang yang ditugaskan.</div>`;
+
+    document.getElementById("pd-body").innerHTML = `
+      <div class="pd-cabang-hdr">
+        <div class="pd-cabang-icon">
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <div>
+          <div class="pd-cabang-nama">${escHtml(c.nama_cabang)}</div>
+          <div class="pd-cabang-wilayah">${escHtml(c.wilayah || "—")}</div>
+        </div>
+      </div>
+
+      <div class="pd-grid">
+        <div class="pd-item">
+          <label>ID Cabang</label>
+          <span>#${c.id}</span>
+        </div>
+        <div class="pd-item">
+          <label>Status</label>
+          <span>${badge}</span>
+        </div>
+        <div class="pd-item full">
+          <label>Terdaftar</label>
+          <span>${tglFormat(c.created_at)}</span>
+        </div>
+      </div>
+
+      <div class="pd-section-label">Admin Cabang</div>
+      <div class="admin-list">${adminHtml}</div>
+
+      <div class="pd-actions">
+        <button class="btn btn-primary btn-sm" onclick="bukaModalEdit(${c.id})">
+          <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Edit Cabang
+        </button>
+        <button class="btn ${toggleClass} btn-sm" onclick="konfirmasiToggle(${c.id},'${escHtml(c.nama_cabang)}',${c.is_active})">
+          ${toggleIcon}
+          ${toggleLabel}
+        </button>
+      </div>`;
+  }
+
+  function tutupPanel() {
+    selectedId = null;
+    document.getElementById("panel-detail").classList.remove("show");
+    document.querySelectorAll("tbody tr").forEach(tr => tr.classList.remove("selected"));
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // MODAL
+  // ═══════════════════════════════════════════════════════
+  function bukaModal() {
+    modeEdit = false;
+    document.getElementById("modal-title").textContent = "Tambah Cabang";
+    document.getElementById("edit-id").value   = "";
+    document.getElementById("f-nama").value    = "";
+    document.getElementById("f-wilayah").value = "";
+    document.getElementById("modal-overlay").classList.add("show");
+    document.body.style.overflow = "hidden";
+  }
+
+  function bukaModalEdit(id) {
+    const c = semuaCabang.find(x => x.id === id);
+    if (!c) return;
+    modeEdit = true;
+    document.getElementById("modal-title").textContent = "Edit Cabang";
+    document.getElementById("edit-id").value   = c.id;
+    document.getElementById("f-nama").value    = c.nama_cabang;
+    document.getElementById("f-wilayah").value = c.wilayah || "";
+    document.getElementById("modal-overlay").classList.add("show");
+    document.body.style.overflow = "hidden";
+  }
+
+  function tutupModal() {
+    document.getElementById("modal-overlay").classList.remove("show");
+    document.body.style.overflow = "";
+  }
+
+  function tutupModalOuter(e) {
+    if (e.target === document.getElementById("modal-overlay")) tutupModal();
+  }
+
+  async function simpanCabang() {
+    const id      = document.getElementById("edit-id").value;
+    const nama    = document.getElementById("f-nama").value.trim();
+    const wilayah = document.getElementById("f-wilayah").value.trim();
+
+    if (!nama) { showToast("Nama cabang wajib diisi", false); return; }
+
+    const btn = document.getElementById("btn-simpan");
+    btn.disabled = true; btn.textContent = "Menyimpan...";
+
+    const endpoint = modeEdit ? `/operator/cabang/${id}` : "/operator/cabang";
+    const method   = modeEdit ? "PUT" : "POST";
+    const data = await apiFetch(endpoint, {
+      method,
+      body: JSON.stringify({ nama_cabang: nama, wilayah: wilayah || null }),
+    });
+
+    btn.disabled = false;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round"><polyline points="20 6 9 17 4 12"/></svg> Simpan`;
+
+    if (!data?.success) { showToast(data?.message || "Gagal menyimpan", false); return; }
+    showToast(modeEdit ? "Cabang berhasil diperbarui" : "Cabang berhasil ditambahkan");
+    tutupModal();
+    await loadCabang();
+    if (modeEdit && selectedId) bukaPanel(selectedId);
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // TOGGLE AKTIF / NONAKTIF
+  // ═══════════════════════════════════════════════════════
+  function konfirmasiToggle(id, nama, isActive) {
+    const icon  = document.getElementById("confirm-icon");
+    const btnOk = document.getElementById("btn-confirm-ok");
+
+    icon.className = `confirm-icon ${isActive ? "red" : "amber"}`;
+    document.getElementById("confirm-title").textContent =
+      isActive ? "Nonaktifkan Cabang?" : "Aktifkan Cabang?";
+    document.getElementById("confirm-desc").textContent  =
+      `Apakah Anda yakin ingin ${isActive ? "menonaktifkan" : "mengaktifkan"} cabang "${nama}"?`;
+    btnOk.className   = `btn btn-sm ${isActive ? "btn-danger" : "btn-success"}`;
+    btnOk.textContent = isActive ? "Ya, Nonaktifkan" : "Ya, Aktifkan";
+    btnOk.onclick     = () => eksekusiToggle(id, isActive);
+
+    document.getElementById("confirm-overlay").classList.add("show");
+    document.body.style.overflow = "hidden";
+  }
+
+  function tutupConfirm() {
+    document.getElementById("confirm-overlay").classList.remove("show");
+    document.body.style.overflow = "";
+  }
+
+  async function eksekusiToggle(id) {
+    const btn = document.getElementById("btn-confirm-ok");
+    btn.disabled = true; btn.textContent = "Memproses...";
+
+    const data = await apiFetch(`/operator/cabang/${id}/toggle`, { method: "PATCH" });
+    btn.disabled = false;
+    tutupConfirm();
+
+    if (!data?.success) { showToast(data?.message || "Gagal mengubah status", false); return; }
+    showToast(data.message);
+    await loadCabang();
+    if (selectedId === id) bukaPanel(id);
+  }
+
+  // ── ESC ───────────────────────────────────────────────────────────────
+  document.addEventListener("keydown", e => {
+    if (e.key !== "Escape") return;
+    if (document.getElementById("confirm-overlay").classList.contains("show")) { tutupConfirm(); return; }
+    if (document.getElementById("modal-overlay").classList.contains("show")) { tutupModal(); return; }
+    tutupPanel();
+  });
+
+  function escHtml(str) {
+    return String(str ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  loadCabang();
+</script>
+</body>
+</html>
