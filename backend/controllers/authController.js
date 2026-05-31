@@ -1,9 +1,9 @@
 const db  = require("../config/db");
 const jwt = require("jsonwebtoken");
+const { logActivity } = require("../utils/logger");
 
 const login = async (req, res) => {
   const { email, password } = req.body;
-
   if (!email || !password)
     return res.status(400).json({ success: false, message: "Email dan password wajib diisi" });
 
@@ -12,12 +12,10 @@ const login = async (req, res) => {
       "SELECT * FROM users WHERE email = ? AND is_active = 1 LIMIT 1",
       [email]
     );
-
     if (rows.length === 0)
       return res.status(401).json({ success: false, message: "Email tidak ditemukan atau akun nonaktif" });
 
     const user = rows[0];
-
     const valid = password === user.password;
     if (!valid)
       return res.status(401).json({ success: false, message: "Password salah" });
@@ -32,6 +30,9 @@ const login = async (req, res) => {
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: process.env.JWT_EXPIRES_IN,
     });
+
+    // ✅ Dipindah ke sini, dalam fungsi login
+    await logActivity(user.id, "Login", `Login dari IP ${req.ip}`);
 
     return res.json({
       success: true,

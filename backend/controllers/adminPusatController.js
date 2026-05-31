@@ -1,5 +1,6 @@
 // controllers/adminPusatController.js
 const db = require("../config/db");
+const { logActivity } = require("../utils/logger");
 
 // ════════════════════════════════════════════════════════════════════════════
 // DASHBOARD
@@ -244,6 +245,9 @@ const prosesLaporan = async (req, res) => {
       "UPDATE laporan_wo SET status = 'diproses', update_at = NOW() WHERE id = ?", [id]
     );
 
+    // ✅ logActivity di dalam fungsi
+    await logActivity(req.user.id, "Proses Laporan", `Laporan ID ${id} diproses`);
+
     return res.json({ success: true, message: "Laporan berhasil diproses" });
   } catch (err) {
     console.error(err);
@@ -319,6 +323,8 @@ const createRekapGaji = async (req, res) => {
     );
 
     await conn.commit();
+    await logActivity(req.user.id, "Buat Rekap Gaji", `Rekap gaji untuk laporan ID ${laporan_wo_id}`);
+
     return res.status(201).json({
       success: true,
       message: "Rekap gaji berhasil dibuat",
@@ -456,6 +462,8 @@ const kirimNotifikasi = async (req, res) => {
        VALUES (?, ?, ?, ?)`,
       [rekap_gaji_id, admin_pusat_id, rekap.admin_cabang_id, rekap.teknisi_id]
     );
+    await logActivity(req.user.id, "Kirim Notifikasi Gaji", `Notifikasi rekap gaji ID ${rekap_gaji_id}`);
+
 
     return res.status(201).json({ success: true, message: "Notifikasi berhasil dikirim ke admin cabang" });
   } catch (err) {

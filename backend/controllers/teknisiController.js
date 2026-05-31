@@ -1,6 +1,5 @@
 // controllers/teknisiController.js
 const db = require("../config/db");
-
 // ════════════════════════════════════════════════════════════════════════════
 // DASHBOARD
 // GET /api/teknisi/dashboard

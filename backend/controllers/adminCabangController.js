@@ -1,5 +1,6 @@
 // controllers/adminCabangController.js
 const db = require("../config/db");
+const { logActivity } = require("../utils/logger");
 
 // ════════════════════════════════════════════════════════════════════════════
 // DASHBOARD
@@ -240,6 +241,7 @@ const createLaporan = async (req, res) => {
     }
 
     await conn.commit();
+    await logActivity(req.user.id, "Buat Laporan", `Laporan WO ID ${laporan_wo_id} dibuat (draft)`);
     return res.status(201).json({
       success: true,
       message: "Laporan berhasil dibuat (draft)",
@@ -288,6 +290,7 @@ const kirimLaporan = async (req, res) => {
       "UPDATE laporan_wo SET admin_pusat_id = ?, status = 'terkirim', update_at = NOW() WHERE id = ?",
       [admin_pusat_id, id]
     );
+    await logActivity(req.user.id, "Kirim Laporan", `Laporan ID ${id} dikirim ke admin pusat`);
 
     return res.json({ success: true, message: "Laporan berhasil dikirim ke admin pusat" });
   } catch (err) {
@@ -322,6 +325,7 @@ const deleteLaporan = async (req, res) => {
     await conn.query("DELETE FROM laporan_wo WHERE id = ?", [id]);
 
     await conn.commit();
+    await logActivity(req.user.id, "Hapus Laporan", `Laporan ID ${id} dihapus`);
     return res.json({ success: true, message: "Laporan berhasil dihapus" });
   } catch (err) {
     await conn.rollback();
@@ -399,6 +403,7 @@ const konfirmasiNotifikasi = async (req, res) => {
        WHERE ng.id = ?`,
       [id]
     );
+    await logActivity(req.user.id, "Konfirmasi Notifikasi", `Notifikasi ID ${id} dikonfirmasi`);
 
     return res.json({ success: true, message: "Konfirmasi berhasil disimpan" });
   } catch (err) {

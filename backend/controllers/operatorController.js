@@ -1,5 +1,6 @@
 // controllers/operatorController.js
 const db = require("../config/db");
+const { logActivity } = require("../utils/logger");
 
 // ════════════════════════════════════════════════════════════════════════════
 // DASHBOARD
@@ -33,7 +34,7 @@ const getDashboard = async (req, res) => {
 
     // Teknisi terbaru (5 terakhir ditambahkan)
     const [teknisi_terbaru] = await db.query(
-      `SELECT u.id, u.nama, u.email, u.is_active, c.nama_cabang, u.created_at
+      `SELECT u.id, u.nama, u.email, c.nama_cabang, u.created_at
        FROM users u
        LEFT JOIN cabang c ON u.cabang_id = c.id
        WHERE u.role = 'teknisi'
@@ -137,6 +138,9 @@ const createTeknisi = async (req, res) => {
       [nama, email, hashed, no_hp || null, cabang_id || null]
     );
 
+    await logActivity(req.user.id, "Tambah Teknisi",
+      `Menambahkan teknisi: ${nama} (${email})`);
+
     return res.status(201).json({
       success: true,
       message: "Teknisi berhasil ditambahkan",
@@ -183,6 +187,9 @@ const updateTeknisi = async (req, res) => {
 
     await db.query(query, params);
 
+    await logActivity(req.user.id, "Edit Teknisi",
+      `Memperbarui data teknisi ID ${id}: ${nama} (${email})`);
+
     return res.json({ success: true, message: "Data teknisi berhasil diperbarui" });
   } catch (err) {
     console.error(err);
@@ -202,6 +209,10 @@ const toggleAktifTeknisi = async (req, res) => {
 
     const newStatus = teknisi.is_active ? 0 : 1;
     await db.query("UPDATE users SET is_active = ? WHERE id = ?", [newStatus, id]);
+
+    await logActivity(req.user.id,
+      newStatus ? "Aktifkan Teknisi" : "Nonaktifkan Teknisi",
+      `Teknisi ID ${id} berhasil ${newStatus ? "diaktifkan" : "dinonaktifkan"}`);
 
     return res.json({
       success: true,
@@ -275,6 +286,9 @@ const createPengguna = async (req, res) => {
       [nama, email, hashed, no_hp || null, role, cabang_id || null]
     );
 
+    await logActivity(req.user.id, "Tambah Pengguna",
+      `Menambahkan ${role === "admin_cabang" ? "admin cabang" : "admin pusat"}: ${nama} (${email})`);
+
     return res.status(201).json({
       success: true,
       message: `${role === "admin_cabang" ? "Admin cabang" : "Admin pusat"} berhasil ditambahkan`,
@@ -320,6 +334,9 @@ const updatePengguna = async (req, res) => {
 
     await db.query(query, params);
 
+    await logActivity(req.user.id, "Edit Pengguna",
+      `Memperbarui data pengguna ID ${id}: ${nama} (${pengguna.role})`);
+
     return res.json({ success: true, message: "Data pengguna berhasil diperbarui" });
   } catch (err) {
     console.error(err);
@@ -340,6 +357,10 @@ const toggleAktifPengguna = async (req, res) => {
 
     const newStatus = pengguna.is_active ? 0 : 1;
     await db.query("UPDATE users SET is_active = ? WHERE id = ?", [newStatus, id]);
+
+    await logActivity(req.user.id,
+      newStatus ? "Aktifkan Pengguna" : "Nonaktifkan Pengguna",
+      `${pengguna.nama} (${pengguna.role}) berhasil ${newStatus ? "diaktifkan" : "dinonaktifkan"}`);
 
     return res.json({
       success: true,
@@ -401,6 +422,9 @@ const createCabang = async (req, res) => {
       [nama_cabang, wilayah || null]
     );
 
+    await logActivity(req.user.id, "Tambah Cabang",
+      `Menambahkan cabang: ${nama_cabang}${wilayah ? " (" + wilayah + ")" : ""}`);
+
     return res.status(201).json({
       success: true,
       message: "Cabang berhasil ditambahkan",
@@ -426,6 +450,9 @@ const updateCabang = async (req, res) => {
       [nama_cabang, wilayah || null, id]
     );
 
+    await logActivity(req.user.id, "Edit Cabang",
+      `Memperbarui cabang ID ${id}: ${nama_cabang}`);
+
     return res.json({ success: true, message: "Cabang berhasil diperbarui" });
   } catch (err) {
     console.error(err);
@@ -445,6 +472,10 @@ const toggleAktifCabang = async (req, res) => {
 
     const newStatus = cabang.is_active ? 0 : 1;
     await db.query("UPDATE cabang SET is_active = ? WHERE id = ?", [newStatus, id]);
+
+    await logActivity(req.user.id,
+      newStatus ? "Aktifkan Cabang" : "Nonaktifkan Cabang",
+      `Cabang ${cabang.nama_cabang} berhasil ${newStatus ? "diaktifkan" : "dinonaktifkan"}`);
 
     return res.json({
       success: true,
@@ -512,6 +543,9 @@ const createProvider = async (req, res) => {
       [nama_provider, kode]
     );
 
+    await logActivity(req.user.id, "Tambah Provider",
+      `Menambahkan provider: ${nama_provider} (${kode})`);
+
     return res.status(201).json({
       success: true,
       message: "Provider berhasil ditambahkan",
@@ -546,6 +580,9 @@ const updateProvider = async (req, res) => {
       [nama_provider, kode, id]
     );
 
+    await logActivity(req.user.id, "Edit Provider",
+      `Memperbarui provider ID ${id}: ${nama_provider} (${kode})`);
+
     return res.json({ success: true, message: "Provider berhasil diperbarui" });
   } catch (err) {
     console.error(err);
@@ -565,6 +602,10 @@ const toggleAktifProvider = async (req, res) => {
 
     const newStatus = provider.is_active ? 0 : 1;
     await db.query("UPDATE provider SET is_active = ? WHERE id = ?", [newStatus, id]);
+
+    await logActivity(req.user.id,
+      newStatus ? "Aktifkan Provider" : "Nonaktifkan Provider",
+      `Provider ${provider.nama_provider} berhasil ${newStatus ? "diaktifkan" : "dinonaktifkan"}`);
 
     return res.json({
       success: true,
@@ -616,6 +657,9 @@ const createProject = async (req, res) => {
       [nama_project, provider_id]
     );
 
+    await logActivity(req.user.id, "Tambah Project",
+      `Menambahkan project: ${nama_project} (provider ID ${provider_id})`);
+
     return res.status(201).json({
       success: true,
       message: "Project berhasil ditambahkan",
@@ -637,6 +681,9 @@ const updateProject = async (req, res) => {
       return res.status(404).json({ success: false, message: "Project tidak ditemukan" });
 
     await db.query("UPDATE project SET nama_project = ? WHERE id = ?", [nama_project, id]);
+
+    await logActivity(req.user.id, "Edit Project",
+      `Memperbarui project ID ${id}: ${nama_project}`);
 
     return res.json({ success: true, message: "Project berhasil diperbarui" });
   } catch (err) {
@@ -693,6 +740,9 @@ const createSubProject = async (req, res) => {
       [nama_sub, project_id, tipe_pembayaran, upah_per_wo || null, gaji_tetap || null]
     );
 
+    await logActivity(req.user.id, "Tambah Sub Project",
+      `Menambahkan sub project: ${nama_sub} (${tipe_pembayaran}, project ID ${project_id})`);
+
     return res.status(201).json({
       success: true,
       message: "Sub project berhasil ditambahkan",
@@ -717,6 +767,9 @@ const updateSubProject = async (req, res) => {
       `UPDATE sub_project SET nama_sub = ?, tipe_pembayaran = ?, upah_per_wo = ?, gaji_tetap = ? WHERE id = ?`,
       [nama_sub, tipe_pembayaran, upah_per_wo || null, gaji_tetap || null, id]
     );
+
+    await logActivity(req.user.id, "Edit Sub Project",
+      `Memperbarui sub project ID ${id}: ${nama_sub} (${tipe_pembayaran})`);
 
     return res.json({ success: true, message: "Sub project berhasil diperbarui" });
   } catch (err) {
@@ -759,6 +812,9 @@ const createJenisPotongan = async (req, res) => {
       [nama, is_wajib ? 1 : 0]
     );
 
+    await logActivity(req.user.id, "Tambah Jenis Potongan",
+      `Menambahkan jenis potongan: ${nama} (${is_wajib ? "wajib" : "opsional"})`);
+
     return res.status(201).json({
       success: true,
       message: "Jenis potongan berhasil ditambahkan",
@@ -783,6 +839,9 @@ const updateJenisPotongan = async (req, res) => {
       "UPDATE jenis_potongan SET nama = ?, is_wajib = ? WHERE id = ?",
       [nama, is_wajib ? 1 : 0, id]
     );
+
+    await logActivity(req.user.id, "Edit Jenis Potongan",
+      `Memperbarui jenis potongan ID ${id}: ${nama} (${is_wajib ? "wajib" : "opsional"})`);
 
     return res.json({ success: true, message: "Jenis potongan berhasil diperbarui" });
   } catch (err) {
@@ -810,6 +869,9 @@ const deleteJenisPotongan = async (req, res) => {
       });
 
     await db.query("DELETE FROM jenis_potongan WHERE id = ?", [id]);
+
+    await logActivity(req.user.id, "Hapus Jenis Potongan",
+      `Menghapus jenis potongan ID ${id}`);
 
     return res.json({ success: true, message: "Jenis potongan berhasil dihapus" });
   } catch (err) {
